@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprechtrainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ee;--surface:#fff;--surface2:#eeebe4;--ink:#1c1f1e;--muted:#676c69;--line:#e1ddd3;
+  --accent:#2d6b5f;--accent-soft:#dcebe6;--accent-ink:#fff;
+  --good:#2b8a55;--good-soft:#dff1e6;--warn:#b97d0e;--warn-soft:#f8ecd2;--bad:#c2443a;--bad-soft:#f8dedb;
+  --neutral:#8a8f8c;--shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
+  --r:16px;--ui:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;--read:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121413;--surface:#1b1e1d;--surface2:#232726;--ink:#ebeae5;--muted:#9a9f9c;--line:#2e3331;
+  --accent:#72c3ad;--accent-soft:#1f3631;--accent-ink:#0e1a17;
+  --good:#53c283;--good-soft:#173324;--warn:#e3aa3d;--warn-soft:#3a2d12;--bad:#ea6c5f;--bad-soft:#3d1c19;
+  --neutral:#7d8380;--shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.25);
+}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.5}
+button,select,input,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hbar{display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.01em}
+.brand .dot{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center}
+.brand .dot svg{width:14px;height:14px}
+.tabs{display:flex;gap:4px;margin-left:12px}
+.tab{border:0;background:none;padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;color:var(--muted)}
+.tab[aria-selected=true]{background:var(--surface2);color:var(--ink)}
+.spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:var(--surface2);font-weight:600;font-size:14px;white-space:nowrap}
+.banner{margin:16px 0 0;padding:14px 18px;border-radius:12px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);display:flex;gap:14px;align-items:flex-start}
+.banner p{margin:0}
+.banner.info{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+main{padding:20px 0 60px}
+.grid{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+@media (max-width:520px){.wrap{padding:0 12px}.hbar{gap:8px}.tab{padding:8px 10px}.chip .tl{display:none}}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.tabs{margin-left:0}.brand span.t{display:none}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.modes{padding:10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:84px}
+@media (max-width:900px){.modes{position:static;flex-direction:row;flex-wrap:wrap}.modes .mbtn{flex:1 1 140px}.modes hr{display:none}}
+.mbtn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:0;background:none;border-radius:12px;padding:10px 12px;cursor:pointer}
+.mbtn b{font-weight:700}
+.mbtn small{color:var(--muted);font-size:13px;line-height:1.3}
+.mbtn:hover{background:var(--surface2)}
+.mbtn[aria-pressed=true]{background:var(--accent-soft)}
+.mbtn.primary{background:var(--accent);color:var(--accent-ink)}
+.mbtn.primary small{color:inherit;opacity:.85}
+.modes hr{border:0;border-top:1px solid var(--line);margin:6px 4px;width:calc(100% - 8px)}
+.stage{padding:24px;display:flex;flex-direction:column;gap:18px;transition:box-shadow .2s,border-color .2s}
+.stage.too-fast{border-color:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 35%,transparent)}
+.stage.flash{animation:flash .5s ease 2}
+@keyframes flash{50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--bad) 45%,transparent)}}
+.shead{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.shead h2{margin:0;font-size:22px;letter-spacing:-.01em;margin-right:auto}
+.prog{font-size:14px;color:var(--muted);font-weight:600}
+.progbar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.progbar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+select,.inp{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:100%}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 16px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--surface2)}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:6px 12px;font-size:14px;border-radius:10px}
+.seg{display:inline-flex;background:var(--surface2);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:9px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.prompt{font-family:var(--read);font-size:clamp(21px,2.1vw,27px);line-height:1.7;padding:22px 24px;background:var(--surface2);border-radius:14px;min-height:120px}
+.prompt.list{display:flex;flex-wrap:wrap;gap:10px 22px}
+.prompt .w{border-radius:6px;padding:0 2px;transition:background .15s}
+.prompt .w.pace{background:var(--accent);color:var(--accent-ink)}
+.prompt .mark{display:inline-block;color:var(--accent);font-weight:700;margin:0 4px;opacity:.8}
+.prompt .mark.hit{color:var(--good);opacity:1}
+.prompt .mark.miss{color:var(--bad);opacity:1}
+.w.ok{background:var(--good-soft)}
+.w.end{background:var(--warn-soft);box-shadow:inset 0 -3px 0 var(--warn)}
+.w.sub{background:var(--warn-soft)}
+.w.del{background:var(--bad-soft);text-decoration:line-through;text-decoration-color:var(--bad)}
+.pz{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 3px 3px;vertical-align:middle}
+.pz.mid{background:var(--bad)}
+.topic{font-size:clamp(24px,2.6vw,32px);font-weight:700;line-height:1.35}
+.hint{color:var(--muted);font-size:15px}
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.rec{border:0;border-radius:999px;padding:16px 30px;font-size:18px;font-weight:800;cursor:pointer;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;gap:10px;min-width:230px;justify-content:center}
+.rec .ic{width:14px;height:14px;border-radius:50%;background:currentColor}
+.rec.on{background:var(--bad);color:#fff}
+.rec.on .ic{border-radius:3px}
+.rec:disabled{opacity:.55;cursor:default}
+.timer{font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;min-width:64px}
+.opts{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-left:auto;font-size:14px}
+.tog{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.tog input{width:18px;height:18px;accent-color:var(--accent)}
+.live{display:grid;grid-template-columns:300px 1fr;gap:18px}
+@media (max-width:700px){.live{grid-template-columns:1fr}}
+.gauge{background:var(--surface2);border-radius:14px;padding:12px 12px 6px;text-align:center}
+.gauge svg{width:100%;max-width:280px;display:block;margin:0 auto}
+.gauge .lab{font-size:13px;color:var(--muted);margin-top:-6px}
+.livebox{display:flex;flex-direction:column;gap:12px}
+.meter{background:var(--surface2);border-radius:14px;padding:12px 14px}
+.meter .bar{position:relative;height:14px;background:var(--surface);border-radius:99px;overflow:hidden;margin-top:6px}
+.meter .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--accent),var(--good));border-radius:99px;width:0}
+.meter .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--muted)}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;color:var(--muted)}
+.row strong{color:var(--ink);font-variant-numeric:tabular-nums}
+.transcript{background:var(--surface2);border-radius:14px;padding:12px 14px;min-height:84px;max-height:160px;overflow:auto;font-size:16px}
+.transcript .int{color:var(--muted)}
+.metro{display:flex;align-items:center;gap:10px;font-size:14px}
+.metro input[type=range]{accent-color:var(--accent);width:140px}
+.beat{width:14px;height:14px;border-radius:50%;background:var(--accent);opacity:.25}
+.beat.on{animation:beat var(--beat,250ms) linear infinite}
+@keyframes beat{0%{opacity:1;transform:scale(1.25)}40%{opacity:.25;transform:scale(1)}100%{opacity:.25}}
+.calib{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;background:var(--accent-soft);font-weight:600}
+.calib .n{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums}
+.res{display:flex;flex-direction:column;gap:16px}
+.reshead{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:18px 20px;border-radius:14px;background:var(--surface2)}
+.score{font-size:46px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.score small{font-size:15px;font-weight:600;color:var(--muted);display:block;letter-spacing:0;margin-top:4px}
+.player{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto}
+.player audio{height:40px;max-width:300px}
+.tips{display:flex;flex-direction:column;gap:8px}
+.tip{padding:12px 16px;border-radius:12px;border-left:4px solid var(--accent);background:var(--accent-soft);font-weight:500}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.mcard{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.mcard h4{margin:0;display:flex;align-items:center;gap:8px;font-size:15px}
+.amp{width:12px;height:12px;border-radius:50%;flex:none;background:var(--neutral)}
+.amp.good{background:var(--good)}.amp.warn{background:var(--warn)}.amp.bad{background:var(--bad)}
+.mval{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.1}
+.mval small{font-size:14px;font-weight:600;color:var(--muted)}
+.msub{font-size:14px;color:var(--muted)}
+.mexp{font-size:13.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.mtip{font-size:14.5px}
+.cmp{display:flex;gap:12px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.cmp .up{color:var(--good)}.cmp .down{color:var(--bad)}
+.scale{position:relative;height:10px;background:var(--surface2);border-radius:99px;margin:6px 0 2px}
+.scale .band{position:absolute;top:0;bottom:0;background:var(--good-soft);border:1px solid color-mix(in srgb,var(--good) 40%,transparent);border-radius:99px}
+.scale .mk{position:absolute;top:-4px;width:4px;height:18px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
+.scale-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:12px;border-radius:3px;display:inline-block}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600}
+.hist{display:grid;gap:18px}
+.hcard{padding:20px}
+.hcard h3{margin:0 0 12px;font-size:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--surface2);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;font-weight:800}
+.kpi span{font-size:13px;color:var(--muted)}
+.chart svg{width:100%;height:auto;display:block}
+.info{max-width:900px}
+.info h3{margin-top:28px}
+.info ol li,.info ul li{margin-bottom:6px}
+code,kbd{background:var(--surface2);padding:2px 6px;border-radius:6px;font-size:.92em}
+pre{background:var(--surface2);padding:12px 14px;border-radius:10px;overflow:auto}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(640px,92vw);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog textarea{width:100%;min-height:180px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--read);font-size:17px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}
+.warmup ol{margin:0;padding-left:22px;font-family:var(--ui);font-size:18px;line-height:1.6}
+.warmup li{margin-bottom:8px}
+.warmup li.now{font-weight:700;color:var(--accent)}
+.spin{width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.muted{color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hbar">
+    <div class="brand"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--accent-ink)"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h0"/></svg></div><span class="t">Sprechtrainer</span></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-view="train" aria-selected="true">Training</button>
+      <button class="tab" role="tab" data-view="history" aria-selected="false">Verlauf</button>
+      <button class="tab" role="tab" data-view="info" aria-selected="false">Info</button>
+    </nav>
+    <div class="spacer"></div>
+    <span class="chip" id="streakChip" title="Tage in Folge mit mindestens einer Übung">🔥 <span id="streakN">0</span><span class="tl">&nbsp;Tage</span></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="bannerFile" class="banner info" hidden>
+    <div><p><b>Du hast die Datei direkt geöffnet (file://).</b> Mikrofon und Messungen klappen in Chrome meistens, die Spracherkennung (für die Deutlichkeit) oft nicht. Wenn die Deutlichkeit fehlt: <a href="#" data-goinfo="open">so öffnest du den Trainer richtig</a>.</p></div>
+    <button class="btn small" data-close="bannerFile">Ok</button>
+  </div>
+  <div id="bannerBlocked" class="banner" hidden>
+    <div><p id="bannerBlockedText"></p><p style="margin-top:6px"><a href="#" data-goinfo="open">Anleitung: Trainer über localhost oder GitHub Pages öffnen</a></p></div>
+    <button class="btn small" data-close="bannerBlocked">Ok</button>
+  </div>
+  <div id="bannerRetest" class="banner info" hidden>
+    <div><p><b>Zeit für deinen Wochen-Test.</b> Gleicher Text wie beim Baseline-Test, damit der Vergleich fair ist (ca. 2 Minuten).</p></div>
+    <button class="btn small acc" id="retestGo">Jetzt testen</button>
+    <button class="btn small" data-close="bannerRetest">Später</button>
+  </div>
+</div>
+
+<main class="wrap">
+  <!-- TRAINING -->
+  <section id="view-train">
+    <div class="grid">
+      <aside class="card modes" id="modes">
+        <button class="mbtn primary" data-mode="daily"><b>Tagesprogramm</b><small>5–8 Min., alles drin</small></button>
+        <hr>
+        <button class="mbtn" data-mode="read"><b>Vorlesen</b><small>Kurze Texte, steigend schwer</small></button>
+        <button class="mbtn" data-mode="tongue"><b>Zungenbrecher</b><small>Langsam → schnell, aber deutlich</small></button>
+        <button class="mbtn" data-mode="endings"><b>Wortenden</b><small>-t, -en, -ch, -st …</small></button>
+        <button class="mbtn" data-mode="pause"><b>Pausen</b><small>Bei | kurz stoppen</small></button>
+        <button class="mbtn" data-mode="free"><b>Freies Sprechen</b><small>60 Sekunden zu einem Thema</small></button>
+        <hr>
+        <button class="mbtn" data-mode="baseline"><b>Baseline / Wochen-Test</b><small>Fester Text, fairer Vergleich</small></button>
+        <button class="mbtn" data-mode="demo"><b>Demo ohne Mikro</b><small>Simulierte Stimme, nichts wird gespeichert</small></button>
+      </aside>
+
+      <div class="card stage" id="stage">
+        <div id="progWrap" hidden>
+          <div class="row" style="margin-bottom:6px"><span class="prog" id="progLabel"></span><button class="btn small" id="progQuit">Programm beenden</button></div>
+          <div class="progbar"><i id="progFill"></i></div>
+        </div>
+        <div class="shead" id="shead"></div>
+        <div id="promptWrap"></div>
+        <div id="calibBox" class="calib" hidden><span class="n" id="calibN">3</span><span>Kurz still sein – ich messe das Raumrauschen …</span></div>
+        <div class="controls" id="controls">
+          <button class="rec" id="recBtn"><span class="ic"></span><span id="recLabel">Aufnahme starten</span></button>
+          <span class="timer" id="timer">0:00</span>
+          <div class="opts">
+            <label class="tog" title="Lauflicht über dem Text im Zieltempo"><input type="checkbox" id="optTakt"> Takt-Modus</label>
+            <span class="metro" id="metroBox" hidden><span class="beat" id="beat"></span><input type="range" id="taktRate" min="2.5" max="5.5" step="0.1" value="4.0"><b id="taktVal">4,0</b>&nbsp;Silben/s</span>
+            <label class="tog" title="Leiser Ton, wenn du zu schnell wirst"><input type="checkbox" id="optBeep"> Warnton</label>
+            <button class="btn small" id="calibBtn" title="3 Sekunden Stille messen">Neu kalibrieren</button>
+          </div>
+        </div>
+        <div class="live" id="live">
+          <div class="gauge">
+            <svg viewBox="0 0 260 150" id="gaugeSvg" aria-label="Tempo-Tacho"></svg>
+            <div class="lab">Silben/s · letzte 2 Sekunden (nur Sprechzeit)</div>
+          </div>
+          <div class="livebox">
+            <div class="meter">
+              <div class="row"><span>Pegel</span><strong id="lvlTxt">– dBFS</strong></div>
+              <div class="bar"><i id="lvlBar"></i><b id="lvlNoise" style="left:0" title="Grundrauschen"></b></div>
+              <div class="row" style="margin-top:6px"><span>Grundrauschen</span><strong id="noiseTxt">noch nicht gemessen</strong></div>
+            </div>
+            <div class="transcript" id="transcript"><span class="muted" id="asrState">Live-Mitschrift erscheint hier.</span></div>
+          </div>
+        </div>
+        <div id="result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="view-history" hidden>
+    <div class="hist">
+      <div class="card hcard">
+        <div class="row" style="margin-bottom:12px"><h3 style="margin:0">Fortschritt</h3>
+          <span><button class="btn small" id="expBtn">Verlauf exportieren</button> <button class="btn small" id="impBtn">Importieren</button><input type="file" id="impFile" accept="application/json,.json" hidden></span></div>
+        <div class="kpis" id="kpis"></div>
+      </div>
+      <div class="card hcard">
+        <div class="row" style="flex-wrap:wrap;margin-bottom:10px"><h3 style="margin:0">Kurven</h3><div class="seg" id="metricSeg"></div></div>
+        <div class="chart" id="chart"></div>
+        <p class="hint" id="chartHint"></p>
+      </div>
+      <div class="card hcard" id="testCard" hidden>
+        <h3>Baseline vs. Wochen-Tests</h3>
+        <div id="testTable"></div>
+      </div>
+      <div class="card hcard">
+        <h3>Letzte Übungen</h3>
+        <div id="sessTable" style="overflow:auto"></div>
+        <p style="margin-top:14px"><button class="btn small" id="wipeBtn">Verlauf löschen …</button></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section id="view-info" hidden>
+    <div class="card hcard info" id="infoBody"></div>
+  </section>
+</main>
+
+<dialog id="customDlg">
+  <h3 style="margin-top:0">Eigener Text</h3>
+  <p class="hint">Z. B. aus deinem Spickzettel. 3–6 Sätze sind ideal. Pausen fürs Pausen-Training markierst du mit <code>|</code>.</p>
+  <input class="inp" id="customTitle" placeholder="Titel (optional)" style="width:100%;margin-bottom:10px">
+  <textarea id="customText" placeholder="Text hier einfügen …"></textarea>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+    <button class="btn" id="customCancel">Abbrechen</button>
+    <button class="btn acc" id="customSave">Speichern & üben</button>
+  </div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<!-- ======================= CORE: reine Signal- und Textanalyse (ohne DOM) ======================= -->
+<script id="core">
+const Core = (() => {
+'use strict';
+const SR = 16000, HOP = 160, WIN = 320, FPS = 100;
+
+/* ---------- Statistik ---------- */
+const mean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : NaN;
+const std = a => { if (a.length < 2) return 0; const m = mean(a); return Math.sqrt(a.reduce((s, v) => s + (v - m) * (v - m), 0) / (a.length - 1)); };
+function quantile(a, q) { if (!a.length) return NaN; const s = Float64Array.from(a).sort(); const p = (s.length - 1) * q, i = Math.floor(p), f = p - i; return i + 1 < s.length ? s[i] * (1 - f) + s[i + 1] * f : s[i]; }
+const median = a => quantile(a, 0.5);
+const db = e => 10 * Math.log10(e + 1e-10);
+const powMeanDb = arr => arr.length ? db(arr.reduce((s, v) => s + Math.pow(10, v / 10), 0) / arr.length) : NaN;
+
+/* ---------- Filter (RBJ-Biquad) ---------- */
+class Biquad {
+  constructor(type, fs, f0, Q = Math.SQRT1_2) {
+    const w = 2 * Math.PI * f0 / fs, c = Math.cos(w), s = Math.sin(w), al = s / (2 * Q);
+    let b0, b1, b2; const a0 = 1 + al, a1 = -2 * c, a2 = 1 - al;
+    if (type === 'lp') { b0 = (1 - c) / 2; b1 = 1 - c; b2 = (1 - c) / 2; }
+    else if (type === 'hp') { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = (1 + c) / 2; }
+    else { b0 = al; b1 = 0; b2 = -al; }
+    this.b0 = b0 / a0; this.b1 = b1 / a0; this.b2 = b2 / a0; this.a1 = a1 / a0; this.a2 = a2 / a0;
+    this.x1 = this.x2 = this.y1 = this.y2 = 0;
+  }
+  p(x) { const y = this.b0 * x + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
+    this.x2 = this.x1; this.x1 = x; this.y2 = this.y1; this.y1 = (Math.abs(y) < 1e-20 ? 0 : y); return this.y1; }
+}
+
+/* ---------- Streaming-Merkmalsextraktion: Resampling auf 16 kHz, Frames alle 10 ms ---------- */
+class Extractor {
+  constructor(inRate) {
+    this.inRate = inRate; this.step = inRate / SR; this.t = 0; this.idx = 0; this.prev = 0;
+    this.aa = inRate > SR * 1.05 ? [new Biquad('lp', inRate, 7200), new Biquad('lp', inRate, 7200)] : [];
+    this.band = [new Biquad('hp', SR, 300), new Biquad('hp', SR, 300), new Biquad('lp', SR, 3000), new Biquad('lp', SR, 3000)];
+    this.chunks = []; this.cur = new Float32Array(SR * 4); this.curN = 0;
+    this.bF = 0; this.bB = 0; this.bN = 0; this.pF = 0; this.pB = 0;
+    this.dbF = []; this.dbB = []; this.peakAbs = 0; this.clip = 0; this.onFrame = null;
+  }
+  push(buf) {
+    for (let i = 0; i < buf.length; i++) {
+      let x = buf[i]; const ax = x < 0 ? -x : x;
+      if (ax > this.peakAbs) this.peakAbs = ax; if (ax > 0.985) this.clip++;
+      for (let k = 0; k < this.aa.length; k++) x = this.aa[k].p(x);
+      while (this.t <= this.idx) { const fr = this.t - (this.idx - 1); this._out(this.prev + (x - this.prev) * fr); this.t += this.step; }
+      this.prev = x; this.idx++;
+    }
+  }
+  _out(y) {
+    if (this.curN === this.cur.length) { this.chunks.push(this.cur); this.cur = new Float32Array(SR * 4); this.curN = 0; }
+    this.cur[this.curN++] = y;
+    let b = y; for (let k = 0; k < 4; k++) b = this.band[k].p(b);
+    this.bF += y * y; this.bB += b * b; this.bN++;
+    if (this.bN === HOP) {
+      this.dbF.push(db((this.bF + this.pF) / WIN)); this.dbB.push(db((this.bB + this.pB) / WIN));
+      this.pF = this.bF; this.pB = this.bB; this.bF = this.bB = 0; this.bN = 0;
+      if (this.onFrame) this.onFrame(this.dbF.length - 1);
+    }
+  }
+  samples() { const n = this.chunks.length * this.cur.length + this.curN; const out = new Float32Array(n); let o = 0;
+    for (const c of this.chunks) { out.set(c, o); o += c.length; } out.set(this.cur.subarray(0, this.curN), o); return out; }
+}
+
+/* ---------- Hüllkurve glätten & Silbenkerne finden ---------- */
+function smoothDb(arr, k = 2) {
+  const n = arr.length, lin = new Float64Array(n), out = new Float64Array(n);
+  for (let i = 0; i < n; i++) lin[i] = Math.pow(10, arr[i] / 20);
+  for (let i = 0; i < n; i++) { let s = 0, c = 0; for (let j = i - k; j <= i + k; j++) if (j >= 0 && j < n) { s += lin[j]; c++; } out[i] = 20 * Math.log10(s / c + 1e-10); }
+  return out;
+}
+function detectNuclei(sm, mask, thr, minDist = 10, dip = 2) {
+  const pk = [];
+  for (let i = 1; i < sm.length - 1; i++) {
+    if (!(sm[i] >= sm[i - 1] && sm[i] > sm[i + 1]) || sm[i] < thr || !mask[i]) continue;
+    if (!pk.length) { pk.push(i); continue; }
+    const p = pk[pk.length - 1]; let m = Infinity; for (let j = p; j <= i; j++) if (sm[j] < m) m = sm[j];
+    if (i - p >= minDist && Math.min(sm[i], sm[p]) - m >= dip) pk.push(i);
+    else if (sm[i] > sm[p]) pk[pk.length - 1] = i;
+  }
+  return pk;
+}
+function speechMask(dbF, thr, gapMax = 25, islandMin = 8) {
+  const n = dbF.length, sp = new Uint8Array(n);
+  for (let i = 0; i < n; i++) sp[i] = dbF[i] > thr ? 1 : 0;
+  // Lücken <= 250 ms schließen (das sind keine Pausen im Sinne der Messung)
+  let i = 0; while (i < n) { if (sp[i]) { i++; continue; } let j = i; while (j < n && !sp[j]) j++; if (i > 0 && j < n && j - i <= gapMax) sp.fill(1, i, j); i = j; }
+  i = 0; while (i < n) { if (!sp[i]) { i++; continue; } let j = i; while (j < n && sp[j]) j++; if (j - i < islandMin) sp.fill(0, i, j); i = j; }
+  return sp;
+}
+function runs(sp) { const segs = []; let i = 0; const n = sp.length; while (i < n) { if (!sp[i]) { i++; continue; } let j = i; while (j < n && sp[j]) j++; segs.push({ s: i, e: j }); i = j; } return segs; }
+
+/* Live-Tempo: Silbenkerne der letzten 2 s geteilt durch die Sprechzeit darin */
+function liveRate(dbF, dbB, noiseF, noiseB, runMax) {
+  const n = dbF.length; if (n < 60) return null;
+  const from = Math.max(0, n - 205), sF = dbF.slice(from), sB = dbB.slice(from);
+  const sp = speechMask(sF, Math.max(noiseF + 10, -65), 25, 8);
+  const lastFrom = sF.length - 200; let spf = 0; for (let i = Math.max(0, lastFrom); i < sF.length; i++) spf += sp[i];
+  if (spf < 50) return null;
+  const sm = smoothDb(sB, 2); const thr = Math.max(noiseB + 8, runMax - 25);
+  const pk = detectNuclei(sm, sp, thr).filter(i => i >= lastFrom && i < sF.length - 2);
+  return pk.length / (spf / FPS);
+}
+
+/* ---------- Tonhöhe per YIN (16 kHz, 20-ms-Schritte) ---------- */
+function yinTrack(x, dbF, thrDb) {
+  const hop = 320, W = 400, tMin = 38, tMax = 246, out = [];
+  const d = new Float64Array(tMax + 1), cm = new Float64Array(tMax + 1);
+  for (let s = 0; s + W + tMax < x.length; s += hop) {
+    const fi = Math.min(dbF.length - 1, Math.floor((s + W / 2) / HOP));
+    if (dbF[fi] < thrDb) { out.push(0); continue; }
+    for (let tau = 1; tau <= tMax; tau++) { let sum = 0; for (let j = 0; j < W; j++) { const df = x[s + j] - x[s + j + tau]; sum += df * df; } d[tau] = sum; }
+    let run = 0; cm[0] = 1;
+    for (let t = 1; t <= tMax; t++) { run += d[t]; cm[t] = run > 0 ? d[t] * t / run : 1; }
+    let tau = -1;
+    for (let t = tMin; t <= tMax; t++) if (cm[t] < 0.15) { while (t + 1 <= tMax && cm[t + 1] < cm[t]) t++; tau = t; break; }
+    if (tau < 0) { out.push(0); continue; }
+    let tt = tau; if (tau > 1 && tau < tMax) { const a = cm[tau - 1], b = cm[tau], c = cm[tau + 1], den = a - 2 * b + c; if (Math.abs(den) > 1e-12) tt = tau + 0.5 * (a - c) / den; }
+    out.push(SR / tt);
+  }
+  return out;
+}
+
+/* ---------- FFT + Spektral-Merkmale ---------- */
+function makeFFT(n) {
+  const bits = Math.log2(n), rev = new Uint32Array(n), co = new Float64Array(n / 2), si = new Float64Array(n / 2);
+  for (let i = 0; i < n; i++) { let r = 0, v = i; for (let b = 0; b < bits; b++) { r = (r << 1) | (v & 1); v >>= 1; } rev[i] = r; }
+  for (let k = 0; k < n / 2; k++) { co[k] = Math.cos(2 * Math.PI * k / n); si[k] = Math.sin(2 * Math.PI * k / n); }
+  return (re, im) => {
+    for (let i = 0; i < n; i++) { const j = rev[i]; if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for (let size = 2; size <= n; size <<= 1) { const h = size >> 1, st = n / size;
+      for (let i = 0; i < n; i += size) for (let j = 0; j < h; j++) { const k = j * st, a = i + j, b = a + h;
+        const tr = re[b] * co[k] + im[b] * si[k], ti = im[b] * co[k] - re[b] * si[k];
+        re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti; } }
+  };
+}
+function spectralTrack(x, dbF, thrDb) {
+  const N = 512, hop = 320, fft = makeFFT(N), re = new Float64Array(N), im = new Float64Array(N), win = new Float64Array(N);
+  for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+  const bw = SR / N, k80 = Math.ceil(80 / bw), k2k = Math.ceil(2000 / bw), kTop = Math.floor(7600 / bw);
+  const hf = [], cen = [];
+  for (let s = 0; s + N < x.length; s += hop) {
+    const fi = Math.min(dbF.length - 1, Math.floor((s + N / 2) / HOP)); if (dbF[fi] < thrDb) continue;
+    for (let i = 0; i < N; i++) { re[i] = x[s + i] * win[i]; im[i] = 0; }
+    fft(re, im);
+    let tot = 0, hi = 0, wsum = 0;
+    for (let k = k80; k <= kTop; k++) { const p = re[k] * re[k] + im[k] * im[k]; tot += p; wsum += p * k * bw; if (k >= k2k) hi += p; }
+    if (tot <= 0) continue; hf.push(db(hi / tot)); cen.push(wsum / tot);
+  }
+  return { hf, cen };
+}
+
+/* ---------- Text: Normalisierung, Zahlen, Silben, Wortenden ---------- */
+const ONES = ['null','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun','zehn','elf','zwölf','dreizehn','vierzehn','fünfzehn','sechzehn','siebzehn','achtzehn','neunzehn'];
+const TENS = ['','','zwanzig','dreissig','vierzig','fünfzig','sechzig','siebzig','achtzig','neunzig'];
+function numWord(n) {
+  if (!Number.isFinite(n) || n < 0 || n >= 1e7) return String(n);
+  if (n < 20) return ONES[n];
+  if (n < 100) { const t = Math.floor(n / 10), o = n % 10; return (o ? (o === 1 ? 'ein' : ONES[o]) + 'und' : '') + TENS[t]; }
+  if (n < 1000) { const h = Math.floor(n / 100), r = n % 100; return (h === 1 ? 'ein' : ONES[h]) + 'hundert' + (r ? numWord(r) : ''); }
+  if (n < 1e6) { const th = Math.floor(n / 1000), r = n % 1000; return (th === 1 ? 'ein' : numWord(th)) + 'tausend' + (r ? numWord(r) : ''); }
+  const mi = Math.floor(n / 1e6), r = n % 1e6; return (mi === 1 ? 'eine million' : numWord(mi) + ' millionen') + (r ? ' ' + numWord(r) : '');
+}
+function normWords(text) {
+  let t = (' ' + text + ' ').toLowerCase().replace(/ß/g, 'ss').replace(/[„“"«»‚‘’'`´]/g, '').replace(/\|/g, ' ')
+    .replace(/%/g, ' prozent ').replace(/&/g, ' und ').replace(/€/g, ' euro ');
+  t = t.replace(/(\d+)[.,](\d+)/g, (m, a, b) => ' ' + numWord(+a) + ' komma ' + numWord(+b) + ' ');
+  t = t.replace(/\d+/g, m => ' ' + numWord(+m) + ' ');
+  t = t.replace(/(\p{L})-(\p{L})/gu, '$1$2');           // Bindestrich-Komposita zusammenziehen
+  t = t.replace(/[^\p{L}\p{N}\s]/gu, ' ');
+  return t.split(/\s+/).filter(Boolean);
+}
+function syllables(w) { const m = w.toLowerCase().match(/ie|ei|ai|au|eu|äu|aa|ee|oo|[aeiouäöüy]/g); return Math.max(1, m ? m.length : 1); }
+function endingCat(w) {
+  if (w.length < 3) return null;
+  if (/en$/.test(w)) return '-en'; if (/st$/.test(w)) return '-st'; if (/t$/.test(w)) return '-t';
+  if (/ch$/.test(w)) return '-ch'; if (/ig$/.test(w)) return '-ig'; if (/ng$/.test(w)) return '-ng';
+  if (/nd$/.test(w)) return '-nd'; if (/tz$/.test(w)) return '-tz'; if (/pf$/.test(w)) return '-pf';
+  if (/er$/.test(w)) return '-er'; if (/el$/.test(w)) return '-el'; return null;
+}
+function tokenizeTarget(text) {
+  const raw = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean), toks = [];
+  for (const r of raw) {
+    if (/^\|+$/.test(r)) { if (toks.length) toks[toks.length - 1].mark = true; continue; }
+    const mark = /\|$/.test(r); const w = r.replace(/\|/g, '');
+    const pm = w.match(/([.!?;:,–—])["“”»«'’)]*$/); const punct = pm ? pm[1] : '';
+    const norm = normWords(w);
+    if (!norm.length) { if (toks.length) { const p = toks[toks.length - 1]; p.punct = p.punct || punct; p.mark = p.mark || mark; } continue; }
+    toks.push({ display: w, norm, punct, mark, syl: norm.reduce((a, n) => a + syllables(n), 0) });
+  }
+  return toks;
+}
+function mergeCompounds(ref, hyp) {
+  const rs = new Set(ref), out = [];
+  for (let i = 0; i < hyp.length; i++) {
+    if (i + 1 < hyp.length && rs.has(hyp[i] + hyp[i + 1]) && !(rs.has(hyp[i]) && rs.has(hyp[i + 1]))) { out.push(hyp[i] + hyp[i + 1]); i++; }
+    else out.push(hyp[i]);
+  }
+  return out;
+}
+function align(ref, hyp) {
+  const n = ref.length, m = hyp.length, W = m + 1, D = new Int32Array((n + 1) * W);
+  for (let i = 0; i <= n; i++) D[i * W] = i; for (let j = 0; j <= m; j++) D[j] = j;
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) {
+    const c = ref[i - 1] === hyp[j - 1] ? 0 : 1;
+    D[i * W + j] = Math.min(D[(i - 1) * W + j - 1] + c, D[(i - 1) * W + j] + 1, D[i * W + j - 1] + 1);
+  }
+  const ops = []; let i = n, j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && D[i * W + j] === D[(i - 1) * W + j - 1] + (ref[i - 1] === hyp[j - 1] ? 0 : 1)) { ops.push({ t: ref[i - 1] === hyp[j - 1] ? 'ok' : 'sub', r: i - 1, h: j - 1 }); i--; j--; }
+    else if (i > 0 && D[i * W + j] === D[(i - 1) * W + j] + 1) { ops.push({ t: 'del', r: i - 1 }); i--; }
+    else { ops.push({ t: 'ins', h: j - 1 }); j--; }
+  }
+  return ops.reverse();
+}
+function isEndingSlip(r, h) {
+  let cp = 0; while (cp < r.length && cp < h.length && r[cp] === h[cp]) cp++;
+  return cp >= 3 && r.length - cp <= 3 && h.length - cp <= 3 && r !== h;
+}
+
+/* ---------- Hauptanalyse einer Aufnahme ---------- */
+function analyze(inp) {
+  const { samples: x, dbF, dbB, mode, tokens, asr } = inp;
+  const n = dbF.length;
+  const noiseF = Number.isFinite(inp.noiseF) ? inp.noiseF : quantile(dbF, 0.1);
+  const noiseB = Number.isFinite(inp.noiseB) ? inp.noiseB : quantile(dbB, 0.1);
+  const spThr = Math.max(noiseF + 10, -65);
+  const sp = speechMask(dbF, spThr);
+  const segs = runs(sp);
+  const speechFrames = segs.reduce((s, g) => s + g.e - g.s, 0);
+  if (!segs.length || speechFrames < 40) return { empty: true, noiseF };
+  const first = segs[0].s, last = segs[segs.length - 1].e;
+  const totalT = (last - first) / FPS, speechT = speechFrames / FPS;
+  const pauses = []; for (let k = 1; k < segs.length; k++) pauses.push({ s: segs[k - 1].e, e: segs[k].s, ms: (segs[k].s - segs[k - 1].e) * 10 });
+
+  // Silbenkerne
+  const sm = smoothDb(dbB, 2);
+  const spVals = []; for (let i = 0; i < n; i++) if (sp[i]) spVals.push(sm[i]);
+  const thrN = Math.max(noiseB + 8, quantile(spVals, 0.99) - 25);
+  const nuc = detectNuclei(sm, sp, thrN);
+  const syl = nuc.length;
+  const m = { syl, totalT, speechT, art: syl / speechT, total: syl / totalT };
+
+  // Pausen
+  m.pauseCount = pauses.length;
+  m.pauseMeanMs = pauses.length ? mean(pauses.map(p => p.ms)) : 0;
+  m.pauseShare = (totalT - speechT) / totalT;
+  m.speechShare = speechT / totalT;
+  m.pausesPerMin = pauses.length / (totalT / 60);
+
+  // Lautstärke
+  const lv = []; for (let i = 0; i < n; i++) if (sp[i] && dbF[i] > spThr) lv.push(dbF[i]);
+  m.level = powMeanDb(lv); m.snr = m.level - noiseF; m.clip = inp.clip || 0;
+  const drops = [];
+  for (const g of segs) { if (g.e - g.s < 80) continue; const v = []; for (let i = g.s; i < g.e; i++) if (dbF[i] > spThr) v.push(dbF[i]);
+    if (v.length < 40) continue; const head = powMeanDb(v.slice(0, Math.floor(v.length * 0.5))), tail = powMeanDb(v.slice(Math.floor(v.length * 0.75))); drops.push(head - tail); }
+  m.drop = drops.length ? mean(drops) : null; m.dropShare = drops.length ? drops.filter(d => d > 8).length / drops.length : null; m.dropN = drops.length;
+
+  // Tonhöhe
+  const f0 = yinTrack(x, dbF, Math.max(noiseF + 12, -60));
+  const voiced = f0.filter(f => f > 0);
+  let pitch = [];
+  if (voiced.length > 20) {
+    const med0 = median(voiced);
+    const clean = f0.map(f => f > 0 && Math.abs(12 * Math.log2(f / med0)) <= 10 ? f : 0);
+    for (let i = 0; i < clean.length; i++) { if (!clean[i]) { pitch.push(0); continue; } const w = []; for (let j = i - 2; j <= i + 2; j++) if (j >= 0 && j < clean.length && clean[j]) w.push(clean[j]); pitch.push(median(w)); }
+    const v = pitch.filter(f => f > 0), med = median(v), st = v.map(f => 12 * Math.log2(f / med));
+    m.f0 = med; m.pitchRange = quantile(st, 0.95) - quantile(st, 0.05); m.pitchStd = std(st); m.voicedN = v.length;
+  } else { m.f0 = null; m.pitchRange = null; m.pitchStd = null; }
+
+  // Schärfe
+  const spec = spectralTrack(x, dbF, Math.max(noiseF + 10, -62));
+  m.hf = spec.hf.length > 10 ? mean(spec.hf) : null; m.cen = spec.cen.length > 10 ? mean(spec.cen) : null;
+
+  // Text / Spracherkennung
+  const det = { segs, pauses, nuc, first, last, n };
+  const hypRaw = asr && asr.text ? normWords(asr.text) : [];
+  m.asrWords = hypRaw.length;
+  const asrOk = !!(asr && asr.available && hypRaw.length > 0);
+  m.clarity = null; m.wer = null; m.endings = null; m.punctHit = null; m.midPauses = null; m.wpm = null;
+  if (tokens && tokens.length) {
+    const ref = [], refTok = [];
+    tokens.forEach((t, j) => t.norm.forEach(w => { ref.push(w); refTok.push(j); }));
+    let lastReadTok = tokens.length - 1;
+    if (asrOk) {
+      const hyp = mergeCompounds(ref, hypRaw);
+      const ops = align(ref, hyp);
+      const st = new Array(ref.length).fill('del'), heard = new Array(ref.length).fill('');
+      let S = 0, Dd = 0, I = 0, lastOk = -1;
+      for (const o of ops) {
+        if (o.t === 'ok') { st[o.r] = 'ok'; heard[o.r] = hyp[o.h]; lastOk = Math.max(lastOk, o.r); }
+        else if (o.t === 'sub') { S++; heard[o.r] = hyp[o.h]; st[o.r] = isEndingSlip(ref[o.r], hyp[o.h]) ? 'end' : 'sub'; }
+        else if (o.t === 'del') Dd++; else I++;
+      }
+      // Wenn du vorzeitig aufgehört hast: nicht Gelesenes am Ende nicht als "verschluckt" zählen
+      let cut = ref.length; if (lastOk >= 0 && lastOk < ref.length - 3) { cut = lastOk + 1; for (let r = cut; r < ref.length; r++) if (st[r] === 'del') Dd--; else if (st[r] !== 'ok') S--; for (let r = cut; r < ref.length; r++) st[r] = 'unread'; }
+      const N = cut; m.wer = Math.min(1, (S + Dd + I) / Math.max(1, N)); m.clarity = Math.max(0, 1 - m.wer);
+      m.sub = S; m.del = Dd; m.ins = I; m.refN = N;
+      const endings = {};
+      for (let r = 0; r < cut; r++) { const c = endingCat(ref[r]); if (!c) continue; const e = endings[c] || (endings[c] = { n: 0, ok: 0, bad: [] }); e.n++; if (st[r] === 'ok') e.ok++; else e.bad.push({ w: ref[r], heard: heard[r], t: st[r], tok: refTok[r] }); }
+      m.endings = endings;
+      const rank = { ok: 0, unread: 0, end: 1, sub: 2, del: 3 };
+      det.tokStatus = tokens.map(() => ({ s: 'ok', heard: [] }));
+      ref.forEach((w, r) => { const ts = det.tokStatus[refTok[r]]; if (rank[st[r]] > rank[ts.s] || st[r] === 'unread' && ts.s === 'ok') ts.s = st[r]; if (heard[r] && heard[r] !== w) ts.heard.push(heard[r]); });
+      det.wordSt = st; det.ref = ref;
+      lastReadTok = refTok[Math.max(0, cut - 1)];
+    }
+    // Pausen den Textstellen zuordnen (über Silbenposition)
+    const cum = []; let c = 0; tokens.forEach((t, j) => { c += t.syl; cum[j] = c; });
+    const tSyl = cum[lastReadTok], scale = syl > 0 ? tSyl / syl : 1;
+    const expected = []; for (let j = 0; j < lastReadTok; j++) { const t = tokens[j]; if (mode === 'pause' ? t.mark : (t.punct || t.mark)) expected.push({ j, pos: cum[j], hit: false }); }
+    const detP = pauses.map(p => { let k = 0; while (k < nuc.length && nuc[k] < p.s) k++; return { pos: k * scale, ms: p.ms, s: p.s, used: false }; });
+    for (const b of expected) { const tol = Math.min(5, 2 + 0.03 * b.pos); let best = null, bd = Infinity;
+      for (const p of detP) { if (p.used) continue; const d = Math.abs(p.pos - b.pos); if (d <= tol && d < bd) { bd = d; best = p; } }
+      if (best) { best.used = true; b.hit = true; } }
+    m.expectedPauses = expected.length; m.hitPauses = expected.filter(b => b.hit).length;
+    m.punctHit = expected.length ? m.hitPauses / expected.length : null;
+    m.midPauses = detP.filter(p => !p.used).length;
+    det.expected = expected; det.detP = detP; det.cum = cum; det.lastReadTok = lastReadTok;
+    let readWords = 0; for (let j = 0; j <= lastReadTok; j++) readWords += tokens[j].norm.length;
+    m.wpm = readWords / totalT * 60; m.wpmSrc = 'text';
+  } else {
+    if (asrOk) { m.wpm = hypRaw.length / totalT * 60; m.wpmSrc = 'asr'; }
+    else { m.wpm = syl / 1.75 / totalT * 60; m.wpmSrc = 'est'; }
+    if (asrOk) { m.recogRate = Math.min(1, hypRaw.length * 1.75 / Math.max(1, syl)); m.asrConf = asr.conf && asr.conf.length ? mean(asr.conf.filter(v => v > 0)) : null; }
+  }
+
+  // Kurven für die Anzeige (verdichtet)
+  const bins = Math.min(320, last - first), lvl = [], spc = [];
+  for (let b = 0; b < bins; b++) { const a = first + Math.floor(b * (last - first) / bins), e = first + Math.floor((b + 1) * (last - first) / bins); let mx = -100, s = 0; for (let i = a; i < Math.max(e, a + 1); i++) { if (dbF[i] > mx) mx = dbF[i]; s |= sp[i]; } lvl.push(mx); spc.push(s); }
+  det.levelCurve = lvl; det.levelSp = spc;
+  const pf = Math.floor(first / 2), pl = Math.floor(last / 2); const pc = pitch.slice(pf, pl);
+  for (let i = 1, lastV = 0, gap = 0; i < pc.length; i++) { if (pc[i]) { if (lastV && gap > 0 && gap <= 6) for (let k = i - gap; k < i; k++) pc[k] = lastV + (pc[i] - lastV) * (k - i + gap + 1) / (gap + 1); lastV = pc[i]; gap = 0; } else gap++; }
+  det.pitchCurve = pc;
+  det.noiseF = noiseF; det.spThr = spThr;
+  return { m, det };
+}
+
+/* ---------- Bewertung: Ampeln, Scores, Tipps ---------- */
+const fmt = (v, d = 1) => v == null || !Number.isFinite(v) ? '–' : v.toFixed(d).replace('.', ',');
+const END_TIPS = {
+  '-t': w => `Wortenden klarer: bei „${w}“ das t am Ende hörbar setzen – kurz und knackig.`,
+  '-en': w => `Bei „${w}“ die Endung -en nicht verschlucken: das e leicht mitsprechen, nicht nur „-n“.`,
+  '-st': w => `Bei „${w}“ das -st komplett sprechen – s und t beide hörbar.`,
+  '-ch': w => `Bei „${w}“ das ch am Ende nicht verhauchen lassen: Luft bewusst bis zum Schluss durchschieben.`,
+  '-ig': w => `Bei „${w}“ das -ig sauber zu Ende sprechen („-ich“), nicht abbrechen.`,
+  '-ng': w => `Bei „${w}“ das -ng am Ende klingen lassen, nicht abwürgen.`,
+  '-nd': w => `Bei „${w}“ das d am Ende als kurzes, hörbares t setzen.`,
+  '-tz': w => `Bei „${w}“ das tz am Ende komplett sprechen.`,
+  '-pf': w => `Bei „${w}“ das pf am Ende sauber setzen – Lippen bewusst schließen.`,
+  '-er': w => `Bei „${w}“ die letzte Silbe nicht wegschlucken.`,
+  '-el': w => `Bei „${w}“ die letzte Silbe -el hörbar lassen.`
+};
+function evaluate(m, ctx) {
+  const rows = [], band = ctx.tempoBand || [3.5, 4.5];
+  // Tempo
+  { const d = m.art < band[0] ? band[0] - m.art : m.art > band[1] ? m.art - band[1] : 0;
+    const status = d === 0 ? 'good' : d <= 0.6 ? 'warn' : 'bad';
+    let tip = m.art > band[1] ? `Mit ${fmt(m.art)} Silben/s bist du zu schnell. Schalt den Takt-Modus auf ${fmt(band[1] - 0.3)} und lass jeder Silbe ihren eigenen Schritt.`
+      : m.art < band[0] ? `Mit ${fmt(m.art)} Silben/s etwas langsam – ruhig ein bisschen zügiger, sonst klingt es zögerlich.` : `Tempo passt (${fmt(m.art)} Silben/s). Genau so weiter.`;
+    rows.push({ key: 'tempo', status, score: Math.max(0, 100 - d * 60), tip, prio: d }); }
+  // Pausen
+  { let status, score, tip;
+    if (m.punctHit != null) {
+      const h = m.punctHit; status = h >= 0.7 ? 'good' : h >= 0.4 ? 'warn' : 'bad'; score = h * 100;
+      if (m.midPauses > Math.max(2, m.expectedPauses * 0.6) && status === 'good') status = 'warn';
+      const miss = ctx.missedWord;
+      tip = ctx.mode === 'pause'
+        ? `Du hast ${m.hitPauses} von ${m.expectedPauses} markierten Pausen gehalten. Zähl bei jedem | innerlich „eins“, bevor du weitersprichst.`
+        : h < 0.7 ? `Nach Satzzeichen fehlt oft die Pause (${m.hitPauses}/${m.expectedPauses}).${miss ? ` Z. B. nach „${miss}“ kurz stoppen und einatmen.` : ''}`
+        : m.midPauses > Math.max(2, m.expectedPauses * 0.6) ? `Pausen an Satzzeichen sitzen, aber ${m.midPauses} Pausen liegen mitten im Satz – Atem lieber an Kommas und Punkten holen.` : 'Deine Pausen sitzen da, wo sie hingehören.';
+    } else {
+      const s = m.speechShare; status = s > 0.88 ? 'bad' : s > 0.82 ? 'warn' : s < 0.5 ? 'warn' : 'good';
+      score = s > 0.82 ? Math.max(0, 100 - (s - 0.82) * 900) : s < 0.5 ? 70 : 100;
+      tip = s > 0.82 ? `Du redest zu ${Math.round(s * 100)} % durch. Nach jedem Gedanken eine bewusste Pause – das wirkt souverän, nicht unsicher.` : s < 0.5 ? 'Viele lange Pausen – überleg dir vorher 2–3 Stichpunkte, dann fließt es besser.' : 'Gutes Verhältnis von Sprechen und Pausen.';
+    }
+    rows.push({ key: 'pause', status, score, tip, prio: (100 - score) / 60 }); }
+  // Deutlichkeit
+  if (m.clarity != null) {
+    const c = m.clarity, status = c >= 0.9 ? 'good' : c >= 0.75 ? 'warn' : 'bad';
+    let tip = 'Sehr deutlich – die Erkennung hat fast alles verstanden.', worst = null;
+    if (m.endings) for (const [cat, e] of Object.entries(m.endings)) { if (!e.bad.length) continue; const slips = e.bad.filter(b => b.t === 'end').length;
+      const w = slips * 2 + e.bad.length + (1 - e.ok / e.n); if (!worst || w > worst.w) worst = { cat, w, e }; }
+    if (c < 0.95 && worst) { const cand = worst.e.bad.filter(b => b.w.length >= 4); const ex = cand.find(b => b.t === 'end') || cand[0] || worst.e.bad[0]; tip = (END_TIPS[worst.cat] || END_TIPS['-er'])(ex.w); }
+    else if (c < 0.95 && ctx.delWord) tip = `„${ctx.delWord}“ wurde gar nicht erkannt – vermutlich verschluckt. Sprich es dreimal einzeln und überdeutlich.`;
+    rows.push({ key: 'clarity', status, score: c * 100, tip, prio: (1 - c) * 6 });
+  } else if (m.recogRate != null) {
+    const r = m.recogRate, status = r >= 0.8 ? 'good' : r >= 0.6 ? 'warn' : 'bad';
+    rows.push({ key: 'clarity', status, score: r * 100, tip: r < 0.8 ? 'Die Erkennung hat einiges nicht mitbekommen – Wortenden und Satzenden bewusster aussprechen.' : 'Die Erkennung kam gut mit – wirkt verständlich.', prio: (1 - r) * 4, est: true });
+  }
+  // Lautstärke
+  { const s1 = m.snr >= 25 ? 'good' : m.snr >= 15 ? 'warn' : 'bad';
+    const s2 = m.drop == null ? 'good' : m.drop <= 5 ? 'good' : m.drop <= 8 ? 'warn' : 'bad';
+    const order = { good: 0, warn: 1, bad: 2 }; let status = order[s1] >= order[s2] ? s1 : s2;
+    if (m.clip > 200 && status === 'good') status = 'warn';
+    const sc1 = Math.min(100, Math.max(0, (m.snr - 10) / 15 * 100)), sc2 = m.drop == null ? 100 : Math.min(100, Math.max(0, 100 - (m.drop - 5) * 20));
+    const tip = s2 !== 'good' ? `Stimme verhungert am Satzende (im Schnitt −${fmt(m.drop)} dB). Vor dem Satz einatmen und die Spannung bis zum letzten Wort halten – das letzte Wort ist oft das wichtigste.`
+      : s1 !== 'good' ? 'Etwas lauter sprechen oder näher ans Mikro (30–50 cm) – du gehst sonst im Raumrauschen unter.'
+      : m.clip > 200 ? 'Teilweise übersteuert – etwas weiter weg vom Mikro.' : 'Lautstärke ist stabil bis zum Satzende.';
+    rows.push({ key: 'level', status, score: Math.min(sc1, sc2), tip, prio: (100 - Math.min(sc1, sc2)) / 60 }); }
+  // Melodie
+  if (m.pitchRange != null) {
+    const r = m.pitchRange, status = r >= 7 ? 'good' : r >= 4 ? 'warn' : 'bad';
+    rows.push({ key: 'pitch', status, score: Math.min(100, r / 8 * 100), tip: r < 7 ? 'Mehr Melodie: betone in jedem Satz ein Schlüsselwort bewusst höher und lauter.' : 'Lebendige Betonung – klingt nicht nach Ablesen.', prio: Math.max(0, 7 - r) / 5 });
+  }
+  // Schärfe
+  if (m.hf != null) {
+    if (ctx.sharpRef == null) rows.push({ key: 'sharp', status: 'neutral', score: null, tip: `Deine persönliche Baseline baut sich noch auf (ab ${3 - (ctx.sharpN || 0)} weiteren Übungen gibt's einen Vergleich).`, prio: 0 });
+    else { const d = m.hf - ctx.sharpRef, status = d >= -1 ? 'good' : d >= -2.5 ? 'warn' : 'bad';
+      rows.push({ key: 'sharp', status, score: Math.max(0, Math.min(100, 100 + (d + 1) * 33)), tip: d < -1 ? 'Weicher als sonst: übertreib t, k, p, s und sch ein bisschen – wie beim Zungenbrecher.' : d > 1 ? 'Schärfer als dein Schnitt – sehr gut, die Konsonanten kommen an.' : 'Konsonanten so klar wie in deinem Schnitt.', prio: Math.max(0, -d - 1), diff: d }); }
+  }
+  const sc = rows.filter(r => r.score != null).map(r => r.score);
+  const score = sc.length ? Math.round(mean(sc)) : null;
+  const top = rows.filter(r => r.status === 'bad' || r.status === 'warn').sort((a, b) => b.prio - a.prio).slice(0, 2);
+  return { rows, score, top };
+}
+
+/* ---------- Synthetische "Stimme" für Demo & Tests ---------- */
+function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function synthSpeech(opts = {}) {
+  const sr = opts.sr || 48000, rate = opts.rate || 4.2, phrases = opts.phrases || [[8, 7], [9], [6, 6]], pauseMs = opts.pauseMs || 550,
+    midPauseMs = opts.midPauseMs || 380, lead = opts.lead || 0.6, dropEnd = opts.dropEnd ?? 0.55, r = rng(opts.seed || 7), noise = opts.noise ?? 0.0015;
+  const parts = [], marks = []; let t = lead, sylCount = 0;
+  for (const ph of phrases) {
+    for (let gi = 0; gi < ph.length; gi++) {
+      const n = ph[gi];
+      for (let s = 0; s < n; s++) {
+        const dur = (1 / rate) * (0.85 + 0.3 * r());
+        const lastOf = s === n - 1 && gi === ph.length - 1;
+        const amp = (0.22 + 0.1 * r()) * (lastOf ? dropEnd : 1) * (1 - 0.25 * (s / n));
+        const st = (r() < 0.25 ? 3 + 2 * r() : 0) - 3 * (s / n) + (r() - 0.5);
+        parts.push({ t, dur, amp, f0: 118 * Math.pow(2, st / 12), fric: r() < 0.45 }); t += dur; sylCount++;
+      }
+      if (gi < ph.length - 1) { marks.push(t); t += midPauseMs / 1000; }
+    }
+    t += pauseMs / 1000 * (0.9 + 0.2 * r());
+  }
+  t += 0.5; const N = Math.ceil(t * sr), x = new Float32Array(N);
+  for (let i = 0; i < N; i++) x[i] = (r() * 2 - 1) * noise;
+  for (const p of parts) {
+    const a = Math.floor(p.t * sr), L = Math.floor(p.dur * sr), vL = Math.floor(L * 0.72); let ph = 0;
+    for (let i = 0; i < vL && a + i < N; i++) {
+      const env = Math.pow(Math.sin(Math.PI * i / vL), 2); ph += 2 * Math.PI * p.f0 * (1 + 0.01 * Math.sin(i / sr * 30)) / sr; let v = 0;
+      for (let h = 1; h <= 24; h++) { const fh = h * p.f0; if (fh > 7000) break; const g = (1 / h) * (fh < 700 ? 1.6 : fh < 1200 ? 1.2 : fh < 3000 ? 0.8 : 0.25); v += g * Math.sin(h * ph); }
+      x[a + i] += p.amp * env * v * 0.45;
+    }
+    if (p.fric) { const fa = a + vL, fL = Math.floor(L * 0.18); let prev = 0; for (let i = 0; i < fL && fa + i < N; i++) { const w = r() * 2 - 1, hpv = w - prev; prev = w; x[fa + i] += hpv * p.amp * 0.22 * Math.sin(Math.PI * i / fL); } }
+  }
+  return { x, sr, sylCount, dur: t };
+}
+function wavBlobBytes(x, sr) {
+  const n = x.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf); let o = 0;
+  const w = s => { for (const c of s) v.setUint8(o++, c.charCodeAt(0)); }; const u32 = d => { v.setUint32(o, d, true); o += 4; }; const u16 = d => { v.setUint16(o, d, true); o += 2; };
+  w('RIFF'); u32(36 + n * 2); w('WAVE'); w('fmt '); u32(16); u16(1); u16(1); u32(sr); u32(sr * 2); u16(2); u16(16); w('data'); u32(n * 2);
+  for (let i = 0; i < n; i++) { const s = Math.max(-1, Math.min(1, x[i])); v.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7fff, true); o += 2; }
+  return buf;
+}
+
+return { SR, HOP, FPS, Extractor, analyze, evaluate, liveRate, smoothDb, tokenizeTarget, normWords, numWord, syllables, endingCat, align, mergeCompounds,
+  synthSpeech, wavBlobBytes, yinTrack, spectralTrack, quantile, mean, median, fmt };
+})();
+if (typeof module !== 'undefined') module.exports = Core;
+</script>
+
+<!-- ======================= INHALTE ======================= -->
+<script>
+const CONTENT = {
+  read: [
+    { id: 'r1', level: 1, title: 'Morgen', text: 'Heute ist ein ruhiger Morgen. Ich trinke einen Kaffee und lese die Nachrichten. Danach fahre ich mit der Bahn zur Uni. Die Vorlesung beginnt um zehn Uhr.' },
+    { id: 'r2', level: 1, title: 'Vereinsspiel', text: 'Am Wochenende spielen wir gegen eine starke Mannschaft. Wir treffen uns eine Stunde vor dem Anpfiff. Der Trainer erklärt die Taktik, dann wärmen wir uns auf. Nach dem Spiel essen wir oft zusammen.' },
+    { id: 'r3', level: 2, title: 'Zwei Welten', text: 'In der Wirtschaftsinformatik verbinden wir zwei Welten. Auf der einen Seite stehen Prozesse, Kosten und Kunden. Auf der anderen Seite stehen Daten, Systeme und Software. Gute Lösungen entstehen dort, wo beide Seiten zusammenpassen.' },
+    { id: 'r4', level: 2, title: 'Algorithmen', text: 'Ein Algorithmus ist eine eindeutige Folge von Schritten. Er nimmt eine Eingabe entgegen und liefert ein Ergebnis. Wichtig ist nicht nur, dass er richtig arbeitet, sondern auch, wie schnell. Deshalb vergleichen wir Laufzeiten mit der O-Notation.' },
+    { id: 'r5', level: 3, title: 'BCG-Matrix', text: 'Die BCG-Matrix ordnet Produkte nach Marktwachstum und relativem Marktanteil. Stars wachsen stark und haben einen hohen Anteil. Cash Cows bringen stabile Gewinne, wachsen aber kaum noch. Question Marks brauchen Investitionen, und Poor Dogs sollte man kritisch prüfen.' },
+    { id: 'r6', level: 3, title: 'Marketing-Mix', text: 'Der Marketing-Mix besteht klassisch aus vier Instrumenten: Produkt, Preis, Distribution und Kommunikation. Jedes Instrument muss zur Zielgruppe passen. Ein Premiumprodukt mit Billigpreis verwirrt die Kunden. Konsistenz schafft Vertrauen und eine klare Positionierung.' },
+    { id: 'r7', level: 3, title: 'Kapitalwert', text: 'Der Kapitalwert hilft bei Investitionsentscheidungen. Man zinst alle künftigen Zahlungen auf den heutigen Zeitpunkt ab und addiert sie. Ist das Ergebnis positiv, lohnt sich die Investition. Entscheidend sind realistische Annahmen zum Kalkulationszinssatz.' },
+    { id: 'r8', level: 4, title: 'Plattformen', text: 'Die Digitalisierung verändert Geschäftsmodelle grundlegend. Plattformunternehmen erzielen Netzwerkeffekte, weil jeder zusätzliche Nutzer das Angebot für alle anderen attraktiver macht. Gleichzeitig steigen die Anforderungen an Datenschutz und Informationssicherheit. Wer das nicht ernst nimmt, verspielt schnell das Vertrauen seiner Kundschaft.' },
+    { id: 'r9', level: 4, title: 'Wirkung', text: 'Bei einer Präsentation zählt nicht nur der Inhalt, sondern auch die Wirkung. Wer zu schnell spricht, verliert sein Publikum bereits nach wenigen Minuten. Klare Pausen geben den Zuhörern Zeit, Gedanken einzuordnen. Deutlich gesetzte Wortenden machen jeden Satz verständlicher.' }
+  ],
+  tongue: [
+    { id: 't1', text: 'Fischers Fritz fischt frische Fische, frische Fische fischt Fischers Fritz.' },
+    { id: 't2', text: 'Blaukraut bleibt Blaukraut und Brautkleid bleibt Brautkleid.' },
+    { id: 't3', text: 'Zwischen zwei Zwetschgenzweigen zwitschern zwei Schwalben.' },
+    { id: 't4', text: 'Der Cottbuser Postkutscher putzt den Cottbuser Postkutschkasten.' },
+    { id: 't5', text: 'Zehn zahme Ziegen zogen zehn Zentner Zucker zum Zoo.' },
+    { id: 't6', text: 'Wenn Fliegen hinter Fliegen fliegen, fliegen Fliegen Fliegen hinterher.' },
+    { id: 't7', text: 'Esel essen Nesseln nicht, Nesseln essen Esel nicht.' },
+    { id: 't8', text: 'Klitzekleine Kinder können keine kleinen Kirschkerne knacken.' },
+    { id: 't9', text: 'Hinter Hermann Hansens Haus hängen hundert Hemden raus.' },
+    { id: 't10', text: 'Max wachst Wachsmasken. Was wachst Max? Wachsmasken wachst Max.' }
+  ],
+  endings: {
+    '-t': ['gemacht', 'gesagt', 'Markt', 'Konzept', 'Produkt', 'Projekt', 'nicht', 'jetzt', 'Arbeit', 'Zeit', 'gelernt', 'erklärt', 'Gewinnt', 'Abschnitt'],
+    '-en': ['machen', 'sehen', 'wollen', 'Kunden', 'Daten', 'Zahlen', 'Märkten', 'Studenten', 'rechnen', 'Kosten', 'planen', 'trainieren'],
+    '-ch': ['ich', 'mich', 'Buch', 'doch', 'noch', 'Fach', 'Bereich', 'möglich', 'wirklich', 'Vergleich', 'Anspruch', 'Gespräch'],
+    '-st': ['fast', 'Herbst', 'selbst', 'Angst', 'Dienst', 'Kunst', 'bist', 'willst', 'Verlust', 'meist'],
+    '-ig': ['wichtig', 'richtig', 'fertig', 'ständig', 'lustig', 'günstig', 'zukünftig', 'nachhaltig'],
+    '-ng': ['Planung', 'Werbung', 'Leistung', 'Rechnung', 'Lösung', 'Ordnung', 'Wirkung', 'Entscheidung'],
+    '-nd': ['Grund', 'Kind', 'Stand', 'Verband', 'Umstand', 'Wettbewerb', 'Hand', 'Bestand'],
+    '-tz / -pf': ['Platz', 'Satz', 'Umsatz', 'Netz', 'Kopf', 'Kampf', 'Gesetz', 'Schutz']
+  },
+  pause: [
+    { id: 'p1', title: 'Agenda', text: 'Guten Morgen zusammen. | Heute geht es um drei Punkte: | erstens den Zeitplan, | zweitens das Budget | und drittens die nächsten Schritte.' },
+    { id: 'p2', title: 'Zahlen', text: 'Unser Umsatz ist gestiegen, | aber die Kosten | sind noch stärker gewachsen. | Deshalb | müssen wir jetzt handeln.' },
+    { id: 'p3', title: 'Kernbotschaft', text: 'Stellen Sie sich vor, | Sie haben nur zehn Sekunden. | Was würden Sie sagen? | Genau das | ist Ihre Kernbotschaft.' },
+    { id: 'p4', title: 'Zielgruppen', text: 'Die Daten zeigen ein klares Bild: | Junge Kunden kaufen online, | ältere Kunden im Laden. | Beide Gruppen | sind uns wichtig.' },
+    { id: 'p5', title: 'Ergebnis', text: 'Wir haben drei Wochen getestet. | Das Ergebnis | ist eindeutig: | Die neue Version | ist schneller, | stabiler | und günstiger.' }
+  ],
+  free: [
+    'Stell dich in einem Vorstellungsgespräch vor.',
+    'Erklär einem Freund die BCG-Matrix.',
+    'Was ist Wirtschaftsinformatik – erklärt für deine Oma?',
+    'Erzähl von deinem letzten Spiel oder Training.',
+    'Beschreib deinen perfekten Urlaub.',
+    'Erklär, wie ein ETF funktioniert.',
+    'Wie kochst du dein Lieblingsgericht?',
+    'Warum sind Daten für Unternehmen so wertvoll?',
+    'Überzeug mich, dass Sport wichtig ist.',
+    'Was hast du diese Woche gelernt?'
+  ],
+  warmup: [
+    { s: 15, t: 'Lippenflattern: Luft durch locker geschlossene Lippen blasen („brrrr“), wie ein Pferd.' },
+    { s: 15, t: 'Zunge kreisen: mit geschlossenem Mund 5× links herum, 5× rechts herum über die Zähne.' },
+    { s: 15, t: 'Übertrieben kauen und dabei summen – Kiefer richtig locker machen.' },
+    { s: 20, t: 'Korken- bzw. Stift-Übung: Stift quer zwischen die Zähne und laut „Fischers Fritz fischt frische Fische“ sagen. Danach ohne Stift wiederholen.' },
+    { s: 10, t: 'Einmal herzhaft gähnen und auf „Mmmmh“ ausatmen.' }
+  ],
+  baselineText: 'Guten Tag, ich möchte Ihnen kurz zeigen, wie ich normalerweise spreche. Dieser Text ist mein fester Testtext, den ich jede Woche wieder vorlese. So kann ich ehrlich vergleichen, ob ich deutlicher und ruhiger geworden bin. Im Studium halte ich Referate, diskutiere in Gruppen und erkläre anderen Leuten komplizierte Zusammenhänge. Dabei kommt es darauf an, dass jedes Wort ankommt. Gerade am Ende eines Satzes verschlucke ich gern einzelne Silben. Deshalb achte ich heute bewusst auf klare Wortenden, ruhige Pausen und eine lebendige Betonung. Wenn ich das schaffe, verstehen mich meine Zuhörer auch dann, wenn der Raum groß ist oder die Technik nicht perfekt funktioniert.',
+  baselineTopic: 'Stell dich kurz vor: Wer bist du, was studierst du, was machst du gern?'
+};
+const ROUNDS = [{ k: 'Langsam', rate: 3.0 }, { k: 'Normal', rate: 4.0 }, { k: 'Schnell', rate: 5.0 }];
+const MODE_NAMES = { read: 'Vorlesen', tongue: 'Zungenbrecher', endings: 'Wortenden', pause: 'Pausen-Training', free: 'Freies Sprechen', warmup: 'Aufwärmen' };
+</script>
+
+<!-- ======================= APP ======================= -->
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = Core.fmt;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const dayKey = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), ms); }
+
+/* ---------- Speicher ---------- */
+const Store = {
+  key: 'sprechtrainer.v1', data: { sessions: [], settings: {}, custom: [] }, ok: true,
+  load() { try { const s = localStorage.getItem(this.key); if (s) { const d = JSON.parse(s); this.data = { sessions: d.sessions || [], settings: d.settings || {}, custom: d.custom || [] }; } } catch (e) { this.ok = false; } },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); return true; } catch (e) { this.ok = false; toast('Speichern im Browser klappt nicht – sichere mit „Verlauf exportieren“.', 4000); return false; } }
+};
+Store.load();
+const S = Store.data;
+
+/* ---------- Zustand ---------- */
+const state = {
+  phase: 'idle', ex: null, program: null, stream: null, ctx: null, ext: null, noiseF: null, noiseB: null, runMax: -100,
+  rec: null, recChunks: [], audioUrl: null, t0: 0, timerH: null, liveRate: null, liveShow: null, lastBeep: 0, demo: null, maxDur: 150,
+  takt: false, taktRate: 4.0, beep: false, lastRes: null
+};
+state.takt = !!S.settings.takt; state.taktRate = S.settings.taktRate || 4.0; state.beep = !!S.settings.beep;
+
+/* ---------- Sicherer Kontext ---------- */
+const isFile = location.protocol === 'file:';
+if (isFile && !S.settings.fileBannerSeen) $('#bannerFile').hidden = false;
+if (!window.isSecureContext && !isFile) showBlocked('Diese Seite läuft nicht in einem sicheren Kontext (kein https/localhost). Chrome blockiert dann Mikrofon und Spracherkennung.');
+function showBlocked(text) { $('#bannerBlockedText').innerHTML = text; $('#bannerBlocked').hidden = false; }
+$$('[data-close]').forEach(b => b.onclick = () => { $('#' + b.dataset.close).hidden = true; if (b.dataset.close === 'bannerFile') { S.settings.fileBannerSeen = true; Store.save(); } });
+document.addEventListener('click', e => { const a = e.target.closest('[data-goinfo]'); if (a) { e.preventDefault(); showView('info'); setTimeout(() => document.getElementById('open')?.scrollIntoView({ behavior: 'smooth' }), 50); } });
+
+/* ---------- Spracherkennung ---------- */
+const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+const ASR = {
+  available: !!SRClass, blocked: false, netErr: false, finals: [], conf: [], interim: '', active: false, r: null, restarts: 0, _res: null,
+  start() {
+    this.finals = []; this.conf = []; this.interim = ''; this.restarts = 0; this.netErr = false;
+    if (!this.available || this.blocked) return;
+    this.active = true; this._make(); try { this.r.start(); } catch (e) {}
+  },
+  _make() {
+    const r = new SRClass(); r.lang = 'de-DE'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+    r.onresult = e => { let im = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; if (res.isFinal) { this.finals.push(res[0].transcript.trim()); this.conf.push(res[0].confidence || 0); } else im += res[0].transcript; } this.interim = im; renderTranscript(); };
+    r.onerror = e => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { this.blocked = true; this.active = false;
+        showBlocked(isFile ? '<b>Die Spracherkennung ist blockiert, weil die Datei als file:// geöffnet ist.</b> Tempo, Pausen, Lautstärke und Melodie werden trotzdem gemessen – nur die Deutlichkeit fehlt.' : '<b>Die Spracherkennung wurde blockiert</b> (Berechtigung verweigert). Erlaub das Mikrofon für diese Seite in Chrome (Schloss-Symbol links neben der Adresse).'); }
+      else if (e.error === 'network') this.netErr = true;
+    };
+    r.onend = () => {
+      if (this.active && !this.blocked && this.restarts < 40) { this.restarts++; if (this.interim) { this.finals.push(this.interim.trim()); this.interim = ''; } setTimeout(() => { if (this.active) { this._make(); try { this.r.start(); } catch (e) {} } }, 80); }
+      else if (this._res) { const f = this._res; this._res = null; f(); }
+    };
+    this.r = r;
+  },
+  stop() {
+    return new Promise(res => {
+      if (!this.r || !this.active) { res(); return; }
+      this.active = false; let done = false;
+      const fin = () => { if (done) return; done = true; if (this.interim.trim()) { this.finals.push(this.interim.trim()); this.interim = ''; } res(); };
+      this._res = fin; try { this.r.stop(); } catch (e) { fin(); } setTimeout(fin, 2000);
+    });
+  },
+  text() { return (this.finals.join(' ') + ' ' + this.interim).trim(); }
+};
+function renderTranscript() {
+  const box = $('#transcript'); const t = ASR.finals.join(' ');
+  box.innerHTML = (t || ASR.interim) ? esc(t) + ' <span class="int">' + esc(ASR.interim) + '</span>' : `<span class="muted">${state.phase === 'rec' ? 'Ich höre zu …' : 'Live-Mitschrift erscheint hier.'}</span>`;
+  box.scrollTop = box.scrollHeight;
+}
+if (!ASR.available) $('#asrState').textContent = 'Spracherkennung in diesem Browser nicht verfügbar – Deutlichkeit wird ausgeblendet, alles andere läuft. (Chrome nutzen.)';
+
+/* ---------- Mikrofon & Audio ---------- */
+const WORKLET = `class Tap extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0}process(inp){const c=inp[0]&&inp[0][0];if(c){for(let i=0;i<c.length;i++){this.b[this.n++]=c[i];if(this.n===2048){this.port.postMessage(this.b.slice(0));this.n=0}}}return true}}registerProcessor('tap',Tap);`;
+async function ensureMic() {
+  if (state.stream) { if (state.ctx.state === 'suspended') await state.ctx.resume(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('nomedia');
+  state.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
+  const Ctx = window.AudioContext || window.webkitAudioContext; state.ctx = new Ctx();
+  const src = state.ctx.createMediaStreamSource(state.stream), sink = state.ctx.createGain(); sink.gain.value = 0; sink.connect(state.ctx.destination);
+  try {
+    const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
+    await state.ctx.audioWorklet.addModule(url);
+    const node = new AudioWorkletNode(state.ctx, 'tap'); node.port.onmessage = e => onAudio(e.data); src.connect(node); node.connect(sink);
+  } catch (e) {
+    const sp = state.ctx.createScriptProcessor(2048, 1, 1); sp.onaudioprocess = ev => onAudio(ev.inputBuffer.getChannelData(0).slice(0)); src.connect(sp); sp.connect(sink);
+  }
+}
+function onAudio(buf) { if (state.ext) state.ext.push(buf); }
+
+/* ---------- Kalibrierung (3 s Stille) ---------- */
+async function calibrate() {
+  setPhase('calib');
+  const ext = new Core.Extractor(state.ctx ? state.ctx.sampleRate : 48000); state.ext = ext; ext.onFrame = liveFrame;
+  for (let s = 3; s > 0; s--) { $('#calibN').textContent = s; await sleep(1000); }
+  state.ext = null;
+  const f = ext.dbF.slice(20), b = ext.dbB.slice(20);
+  state.noiseF = Core.quantile(f, 0.3); state.noiseB = Core.quantile(b, 0.3);
+  S.settings.noise = { f: state.noiseF, b: state.noiseB, ts: Date.now() }; Store.save();
+  $('#noiseTxt').textContent = fmt(state.noiseF, 0) + ' dBFS';
+  if (state.noiseF > -35) toast('Ziemlich laut im Raum – die Messungen werden ungenauer.', 3500);
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- Live-Anzeige ---------- */
+function liveFrame(k) {
+  const e = state.ext; if (!e) return;
+  const v = e.dbF[k]; state.liveDb = v;
+  if (state.phase !== 'rec' || k % 10) return;
+  const sb = e.dbB.slice(Math.max(0, k - 3), k + 1); const mx = Math.max(...sb); state.runMax = Math.max(state.runMax - 0.2, mx);
+  const r = Core.liveRate(e.dbF, e.dbB, state.noiseF ?? -70, state.noiseB ?? -80, state.runMax);
+  state.liveRate = r;
+  if (r != null) state.liveShow = state.liveShow == null ? r : state.liveShow * 0.6 + r * 0.4; else if (state.liveShow != null) state.liveShow *= 0.97;
+}
+function drawLoop() {
+  const db = state.liveDb; if (db != null) { const p = Math.max(0, Math.min(1, (db + 70) / 70)); $('#lvlBar').style.width = (p * 100) + '%'; $('#lvlTxt').textContent = fmt(db, 0) + ' dBFS'; }
+  if (state.noiseF != null) $('#lvlNoise').style.left = Math.max(0, Math.min(100, (state.noiseF + 70) / 70 * 100)) + '%';
+  setGauge(state.phase === 'rec' ? state.liveShow : null);
+  requestAnimationFrame(drawLoop);
+}
+function tempoBand() { if (state.ex && state.ex.mode === 'tongue') { const r = ROUNDS[state.ex.round ?? 1].rate; return [r - 0.5, r + 0.5]; } return [3.5, 4.5]; }
+const G = { cx: 130, cy: 128, r: 100, max: 7 };
+function gp(v, r = G.r) { const a = Math.PI * (1 - Math.min(G.max, Math.max(0, v)) / G.max); return [G.cx + r * Math.cos(a), G.cy - r * Math.sin(a)]; }
+function arc(v1, v2, col, w = 16) { const [x1, y1] = gp(v1), [x2, y2] = gp(v2); return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${G.r} ${G.r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${col}" stroke-width="${w}" fill="none"/>`; }
+function buildGauge() {
+  const [lo, hi] = tempoBand();
+  let s = arc(0, G.max, 'var(--surface)', 18) + arc(Math.max(0, lo - 0.6), lo, 'var(--warn)') + arc(lo, hi, 'var(--good)') + arc(hi, hi + 0.6, 'var(--warn)') + arc(hi + 0.6, G.max, 'var(--bad)');
+  for (let v = 0; v <= G.max; v++) { const [x, y] = gp(v, G.r - 20); s += `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11" text-anchor="middle" fill="var(--muted)">${v}</text>`; }
+  s += `<line id="gNeedle" x1="${G.cx}" y1="${G.cy}" x2="${G.cx}" y2="${G.cy - 84}" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" style="transform-origin:${G.cx}px ${G.cy}px;transition:transform .25s"/><circle cx="${G.cx}" cy="${G.cy}" r="7" fill="var(--ink)"/>`;
+  s += `<text id="gVal" x="${G.cx}" y="${G.cy - 30}" font-size="34" font-weight="800" text-anchor="middle" fill="var(--ink)" font-family="Manrope,system-ui">–</text>`;
+  $('#gaugeSvg').innerHTML = s;
+}
+function setGauge(v) {
+  const n = $('#gNeedle'), t = $('#gVal'); if (!n) return;
+  const [lo, hi] = tempoBand();
+  const ang = v == null ? -90 : -90 + Math.min(G.max, v) / G.max * 180; n.style.transform = `rotate(${ang}deg)`;
+  t.textContent = v == null ? '–' : fmt(v); t.setAttribute('fill', v == null ? 'var(--ink)' : v > hi + 0.5 ? 'var(--bad)' : v > hi || v < lo ? 'var(--warn)' : 'var(--good)');
+  const tooFast = v != null && v > hi + 0.5 && state.phase === 'rec';
+  $('#stage').classList.toggle('too-fast', tooFast);
+  if (tooFast && performance.now() - state.lastBeep > 2200) { state.lastBeep = performance.now(); const st = $('#stage'); st.classList.remove('flash'); void st.offsetWidth; st.classList.add('flash'); if (state.beep) beep(); }
+}
+function beep() { try { const c = state.ctx || new (window.AudioContext || window.webkitAudioContext)(); const o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; g.gain.value = 0.0001; o.connect(g).connect(c.destination); const t = c.currentTime; g.gain.exponentialRampToValueAtTime(0.06, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15); o.start(t); o.stop(t + 0.17); } catch (e) {} }
+
+/* ---------- Übungen ---------- */
+function makeEndingList(cat) {
+  const cats = cat && CONTENT.endings[cat] ? [cat] : Object.keys(CONTENT.endings).sort(() => Math.random() - 0.5).slice(0, 4);
+  const per = cats.length === 1 ? 10 : 3, words = [];
+  for (const c of cats) words.push(...[...CONTENT.endings[c]].sort(() => Math.random() - 0.5).slice(0, per));
+  return words.sort(() => Math.random() - 0.5);
+}
+function readPool() { return [...CONTENT.read, ...S.custom.map(c => ({ ...c, level: 'eigen' }))]; }
+function suggestedReadLevel() { const r = S.sessions.filter(s => s.mode === 'read').slice(-5); if (r.length < 2) return 1; const c = Core.mean(r.map(s => s.m.clarity ?? 0.8)); return c > 0.92 ? 4 : c > 0.86 ? 3 : c > 0.78 ? 2 : 1; }
+function exFor(mode, o = {}) {
+  if (mode === 'read') { const it = o.item || rnd(CONTENT.read.filter(t => t.level === suggestedReadLevel())) || CONTENT.read[0]; return { mode, item: it, text: it.text, title: it.title }; }
+  if (mode === 'tongue') { const it = o.item || rnd(CONTENT.tongue); return { mode, item: it, text: it.text, round: o.round ?? 0 }; }
+  if (mode === 'endings') { const words = o.words || makeEndingList(o.cat); return { mode, words, cat: o.cat || '', text: words.join(', ') + '.' }; }
+  if (mode === 'pause') { const it = o.item || rnd(CONTENT.pause); return { mode, item: it, text: it.text }; }
+  if (mode === 'free') return { mode, topic: o.topic || rnd(CONTENT.free), dur: o.dur || 60 };
+  if (mode === 'warmup') return { mode };
+}
+function setExercise(ex) {
+  stopTakt(); state.ex = ex; state.tokens = ex.text ? Core.tokenizeTarget(ex.text) : null;
+  $('#result').innerHTML = ''; $('#timer').textContent = ex.mode === 'free' ? clock(ex.dur) : '0:00'; renderHead(); renderPrompt(); buildGauge(); setPhase('idle');
+  $('#live').hidden = ex.mode === 'warmup'; $('#controls').hidden = ex.mode === 'warmup';
+  $$('.mbtn').forEach(b => b.setAttribute('aria-pressed', String(!state.program && b.dataset.mode === ex.mode && !ex.test)));
+}
+function renderHead() {
+  const ex = state.ex, h = $('#shead'); let html = '';
+  const title = ex.test ? (ex.test === 'baseline' ? 'Baseline-Test' : 'Wochen-Test') + ' · ' + MODE_NAMES[ex.mode] : MODE_NAMES[ex.mode];
+  html += `<h2>${esc(title)}</h2>`;
+  if (!state.program && !ex.test) {
+    if (ex.mode === 'read') {
+      const pool = readPool();
+      html += `<select id="selText">${pool.map(t => `<option value="${t.id}" ${t.id === ex.item.id ? 'selected' : ''}>${t.level === 'eigen' ? 'Eigen' : 'Stufe ' + t.level} · ${esc(t.title)}</option>`).join('')}</select><button class="btn small" id="btnCustom">+ Eigener Text</button>`;
+    } else if (ex.mode === 'tongue') {
+      html += `<select id="selTw">${CONTENT.tongue.map(t => `<option value="${t.id}" ${t.id === ex.item.id ? 'selected' : ''}>${esc(t.text.slice(0, 32))}…</option>`).join('')}</select>`;
+    } else if (ex.mode === 'endings') {
+      html += `<select id="selCat"><option value="">Gemischt</option>${Object.keys(CONTENT.endings).map(c => `<option ${c === ex.cat ? 'selected' : ''}>${c}</option>`).join('')}</select><button class="btn small" id="btnNewList">Neue Liste</button>`;
+    } else if (ex.mode === 'pause') {
+      html += `<select id="selPause">${[...CONTENT.pause, ...S.custom.filter(c => c.text.includes('|'))].map(t => `<option value="${t.id}" ${t.id === ex.item.id ? 'selected' : ''}>${esc(t.title)}</option>`).join('')}</select><button class="btn small" id="btnCustom">+ Eigener Text</button>`;
+    } else if (ex.mode === 'free') {
+      html += `<select id="selTopic">${CONTENT.free.map(t => `<option ${t === ex.topic ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select><button class="btn small" id="btnRandTopic">Zufall</button>`;
+    }
+  }
+  if (ex.mode === 'tongue' && !ex.test) html += `<div class="seg" id="segRound">${ROUNDS.map((r, i) => `<button aria-pressed="${i === ex.round}" data-r="${i}">${r.k} · ${fmt(r.rate)}</button>`).join('')}</div>`;
+  h.innerHTML = html;
+  const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el[ev] = fn; };
+  on('selText', 'onchange', e => setExercise(exFor('read', { item: readPool().find(t => t.id === e.target.value) })));
+  on('selTw', 'onchange', e => setExercise(exFor('tongue', { item: CONTENT.tongue.find(t => t.id === e.target.value), round: state.ex.round })));
+  on('selCat', 'onchange', e => setExercise(exFor('endings', { cat: e.target.value })));
+  on('btnNewList', 'onclick', () => setExercise(exFor('endings', { cat: state.ex.cat })));
+  on('selPause', 'onchange', e => setExercise(exFor('pause', { item: [...CONTENT.pause, ...S.custom].find(t => t.id === e.target.value) })));
+  on('selTopic', 'onchange', e => setExercise(exFor('free', { topic: e.target.value })));
+  on('btnRandTopic', 'onclick', () => setExercise(exFor('free')));
+  on('btnCustom', 'onclick', () => { $('#customTitle').value = ''; $('#customText').value = ''; $('#customDlg').showModal(); });
+  $$('#segRound button').forEach(b => b.onclick = () => { state.ex.round = +b.dataset.r; if (state.program) return; setExercise({ ...state.ex }); });
+}
+function renderPrompt(status) {
+  const ex = state.ex, w = $('#promptWrap');
+  if (ex.mode === 'warmup') {
+    w.innerHTML = `<div class="prompt warmup"><ol id="wuList">${CONTENT.warmup.map(s => `<li>${esc(s.t)} <span class="muted">(${s.s} s)</span></li>`).join('')}</ol></div>
+      <div class="controls" style="margin-top:14px"><button class="rec" id="wuGo"><span class="ic"></span>Aufwärmen starten</button><span class="timer" id="wuTimer"></span><button class="btn" id="wuSkip">Überspringen</button></div>`;
+    $('#wuGo').onclick = runWarmup; $('#wuSkip').onclick = () => nextStep(); return;
+  }
+  if (ex.mode === 'free') {
+    w.innerHTML = `<div class="prompt"><div class="hint">Thema · ${ex.dur} Sekunden, einfach drauflos</div><div class="topic">${esc(ex.topic)}</div><div class="hint" style="margin-top:10px">Tipp: Erst 3 Sekunden sammeln, dann in kurzen Sätzen sprechen – nach jedem Gedanken eine Pause.</div></div>`; return;
+  }
+  const toks = state.tokens, d = status && status.det, ts = d && d.tokStatus;
+  const expMap = {}; if (d && d.expected) d.expected.forEach(b => expMap[b.j] = b.hit);
+  const midAfter = {}; if (d && d.detP && d.cum) d.detP.filter(p => !p.used).forEach(p => { let j = 0; while (j < toks.length - 1 && d.cum[j] < p.pos) j++; midAfter[j] = true; });
+  const list = ex.mode === 'endings';
+  let html = '';
+  toks.forEach((t, j) => {
+    let cls = 'w', title = '';
+    if (ts) { const s = ts[j].s; cls += ' ' + (s === 'unread' ? '' : s); if (ts[j].heard.length) title = 'erkannt: ' + ts[j].heard.join(' '); else if (s === 'del') title = 'nicht erkannt'; }
+    const disp = list ? t.display.replace(/[,.]$/, '') : t.display;
+    html += `<span class="${cls}" data-i="${j}" ${title ? `title="${esc(title)}"` : ''}>${esc(disp)}</span>`;
+    if (t.mark) html += `<span class="mark ${expMap[j] === true ? 'hit' : expMap[j] === false ? 'miss' : ''}">|</span>`;
+    else if (d && expMap[j] !== undefined && ex.mode !== 'pause') html += `<span class="pz ${expMap[j] ? '' : 'mid'}" title="${expMap[j] ? 'Pause gehalten' : 'keine Pause'}" style="${expMap[j] ? '' : 'background:var(--line)'}"></span>`;
+    if (d && midAfter[j] && !(t.punct || t.mark)) html += `<span class="pz mid" title="Pause mitten im Satz"></span>`;
+    html += list ? '' : ' ';
+  });
+  let sub = '';
+  if (ex.mode === 'tongue') sub = `<div class="hint" style="margin-top:8px">Runde „${ROUNDS[ex.round].k}“: Ziel ca. ${fmt(ROUNDS[ex.round].rate)} Silben/s – die Deutlichkeit muss bleiben, auch wenn's schneller wird.</div>`;
+  if (ex.mode === 'pause') sub = `<div class="hint" style="margin-top:8px">Bei jedem <b>|</b> kurz stoppen (ca. eine halbe Sekunde), dann weiter.</div>`;
+  if (ex.mode === 'endings') sub = `<div class="hint" style="margin-top:8px">Jedes Wort einzeln, mit kleiner Pause – und das Ende bewusst hörbar.</div>`;
+  w.innerHTML = `<div class="prompt ${list ? 'list' : ''}" id="prompt">${html}</div>${sub}`;
+}
+
+/* ---------- Takt-Modus / Lauflicht ---------- */
+let taktH = null;
+function startTakt() {
+  stopTakt(); const beat = $('#beat'); beat.style.setProperty('--beat', (1000 / state.taktRate) + 'ms'); beat.classList.add('on');
+  if (!state.tokens) return;
+  const sched = []; let t = 0;
+  state.tokens.forEach((tk, j) => { sched.push({ j, t }); t += tk.syl / state.taktRate; if (tk.mark || /[.!?]/.test(tk.punct)) t += 0.6; else if (tk.punct) t += 0.35; else if (state.ex.mode === 'endings') t += 0.45; });
+  const t0 = performance.now(); let last = -1;
+  const step = () => { const el = (performance.now() - t0) / 1000; let k = -1; for (let i = 0; i < sched.length; i++) if (sched[i].t <= el) k = i; else break;
+    if (k !== last) { $$('#prompt .w.pace').forEach(e => e.classList.remove('pace')); if (k >= 0 && el < t + 0.5) document.querySelector(`#prompt .w[data-i="${sched[k].j}"]`)?.classList.add('pace'); last = k; }
+    taktH = requestAnimationFrame(step); };
+  taktH = requestAnimationFrame(step);
+}
+function stopTakt() { if (taktH) cancelAnimationFrame(taktH); taktH = null; $('#beat')?.classList.remove('on'); $$('#prompt .w.pace').forEach(e => e.classList.remove('pace')); }
+
+/* ---------- Ablauf: Aufnahme ---------- */
+function setPhase(p) {
+  state.phase = p; const b = $('#recBtn'), l = $('#recLabel');
+  b.classList.toggle('on', p === 'rec'); b.disabled = p === 'calib' || p === 'analyzing';
+  l.textContent = p === 'rec' ? 'Stopp & auswerten' : p === 'calib' ? 'Kalibriere …' : p === 'analyzing' ? 'Werte aus …' : 'Aufnahme starten';
+  $('#calibBox').hidden = p !== 'calib';
+  if (p !== 'rec') $('#stage').classList.remove('too-fast');
+  renderTranscript();
+}
+$('#recBtn').onclick = () => { if (state.phase === 'idle') startRec(); else if (state.phase === 'rec') stopRec(); };
+document.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName) && !$('#view-train').hidden && state.ex && state.ex.mode !== 'warmup') { e.preventDefault(); $('#recBtn').click(); } });
+
+async function startRec() {
+  if (state.ex.demo) return runDemo();
+  try { await ensureMic(); }
+  catch (e) {
+    const name = e && e.name;
+    showBlocked(name === 'NotAllowedError' ? '<b>Kein Mikrofon-Zugriff.</b> Erlaub das Mikrofon für diese Seite (Schloss-Symbol links neben der Adresse) und lade neu.' : name === 'NotFoundError' ? '<b>Kein Mikrofon gefunden.</b> Ist eins angeschlossen bzw. aktiviert?' : '<b>Mikrofon nicht verfügbar.</b> ' + (isFile ? 'Vermutlich blockiert Chrome es bei file:// – öffne den Trainer über localhost oder GitHub Pages.' : 'Prüf die Browser-Berechtigungen.'));
+    return;
+  }
+  if (state.noiseF == null) await calibrate();
+  state.ext = new Core.Extractor(state.ctx.sampleRate); state.ext.onFrame = liveFrame; state.runMax = -100; state.liveShow = null;
+  state.recChunks = []; state.rec = null;
+  try { const mt = MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? { mimeType: 'audio/webm;codecs=opus' } : undefined; state.rec = new MediaRecorder(state.stream, mt); state.rec.ondataavailable = e => e.data.size && state.recChunks.push(e.data); state.rec.start(250); } catch (e) { state.rec = null; }
+  ASR.start(); setPhase('rec'); if (state.takt) startTakt();
+  state.t0 = performance.now(); const max = state.ex.mode === 'free' ? state.ex.dur : 150;
+  clearInterval(state.timerH);
+  state.timerH = setInterval(() => { const s = (performance.now() - state.t0) / 1000; $('#timer').textContent = state.ex.mode === 'free' ? clock(Math.max(0, max - s)) : clock(s); if (s >= max) stopRec(); }, 200);
+}
+const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+async function stopRec() {
+  if (state.phase !== 'rec') return;
+  clearInterval(state.timerH); stopTakt(); setPhase('analyzing');
+  const ext = state.ext; state.ext = null;
+  const recDone = new Promise(res => { if (!state.rec || state.rec.state === 'inactive') return res(); state.rec.onstop = res; try { state.rec.stop(); } catch (e) { res(); } });
+  await Promise.all([ASR.stop(), recDone]);
+  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+  state.audioUrl = state.recChunks.length ? URL.createObjectURL(new Blob(state.recChunks, { type: state.recChunks[0].type || 'audio/webm' })) : null;
+  $('#result').innerHTML = `<div class="reshead"><span class="spin"></span> Werte aus …</div>`;
+  await sleep(30);
+  finish(ext, { available: ASR.available && !ASR.blocked, text: ASR.text(), conf: ASR.conf, netErr: ASR.netErr }, false);
+}
+
+function finish(ext, asr, demo) {
+  const ex = state.ex;
+  let res;
+  try { res = Core.analyze({ samples: ext.samples(), dbF: ext.dbF, dbB: ext.dbB, noiseF: state.noiseF, noiseB: state.noiseB, mode: ex.mode, tokens: state.tokens, asr, clip: ext.clip }); }
+  catch (e) { console.error(e); $('#result').innerHTML = `<div class="banner">Bei der Auswertung ist etwas schiefgelaufen: ${esc(e.message)}</div>`; setPhase('idle'); return; }
+  setPhase('idle');
+  if (res.empty) { $('#result').innerHTML = `<div class="banner"><p><b>Ich habe kaum Sprache gehört.</b> War das richtige Mikrofon aktiv? Sprich etwas lauter oder kalibriere neu (vielleicht war es beim Kalibrieren nicht still).</p></div>`; return; }
+  const m = res.m;
+  // Kontext für Bewertung
+  const prev = S.sessions.filter(s => !s.demo);
+  const sameMode = prev.filter(s => s.mode === ex.mode && s.m.hf != null);
+  const pool = sameMode.length >= 3 ? sameMode : prev.filter(s => s.m.hf != null);
+  const ctx = { mode: ex.mode, tempoBand: tempoBand(), sharpRef: pool.length >= 3 ? Core.mean(pool.map(s => s.m.hf)) : null, sharpN: pool.length };
+  if (res.det.expected) { const miss = res.det.expected.find(b => !b.hit); if (miss) ctx.missedWord = state.tokens[miss.j].display; }
+  if (res.det.wordSt) { const i = res.det.wordSt.indexOf('del'); if (i >= 0) ctx.delWord = res.det.ref[i]; }
+  const ev = Core.evaluate(m, ctx);
+  m.score = ev.score; m.sharpDiff = (ev.rows.find(r => r.key === 'sharp') || {}).diff ?? null;
+  const sess = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts: Date.now(), mode: ex.mode, test: ex.test || null, round: ex.round ?? null, item: ex.item ? ex.item.id : null, title: ex.title || ex.topic || (ex.item && (ex.item.title || ex.item.text.slice(0, 30))) || MODE_NAMES[ex.mode], demo: !!demo, asr: !!asr.available, m: slim(m) };
+  const sameModePrev = prev.filter(s => s.mode === ex.mode);
+  const cmp = { avg: avgMetrics(prev), last: sameModePrev[sameModePrev.length - 1] || prev[prev.length - 1] || null, lastSameMode: !!sameModePrev.length };
+  if (!demo) { S.sessions.push(sess); Store.save(); updateStreak(); }
+  state.lastRes = { res, ev, sess, cmp, asr };
+  renderPrompt(res);
+  renderResult(state.lastRes, demo);
+}
+function slim(m) { const o = {}; for (const k of ['art', 'total', 'wpm', 'wpmSrc', 'syl', 'totalT', 'speechT', 'pauseCount', 'pauseMeanMs', 'pauseShare', 'speechShare', 'pausesPerMin', 'punctHit', 'midPauses', 'expectedPauses', 'hitPauses', 'clarity', 'wer', 'recogRate', 'level', 'snr', 'drop', 'dropShare', 'pitchRange', 'pitchStd', 'f0', 'hf', 'cen', 'score', 'sharpDiff']) if (m[k] != null && (typeof m[k] !== 'number' || Number.isFinite(m[k]))) o[k] = typeof m[k] === 'number' ? Math.round(m[k] * 1000) / 1000 : m[k];
+  if (m.endings) { o.endings = {}; for (const [c, e] of Object.entries(m.endings)) o.endings[c] = { n: e.n, ok: e.ok }; } return o; }
+function avgMetrics(list) { const o = {}; for (const k of ['art', 'total', 'wpm', 'punctHit', 'speechShare', 'clarity', 'snr', 'drop', 'pitchRange', 'hf', 'score', 'pauseMeanMs']) { const v = list.map(s => s.m[k]).filter(x => x != null && Number.isFinite(x)); o[k] = v.length ? Core.mean(v) : null; } return o; }
+
+/* ---------- Ergebniskarte ---------- */
+const EXPL = {
+  tempo: 'Silben pro Sekunde – „Artikulation“ zählt nur die Zeit, in der du wirklich sprichst, „gesamt“ inklusive Pausen.',
+  pause: 'Pausen über 250 ms geben dem Zuhörer Zeit; ideal sitzen sie an Satzzeichen, nicht mitten im Satz.',
+  clarity: 'Wie viele Wörter die Spracherkennung so verstanden hat, wie sie im Text stehen (Wort-Fehlerrate, 100 % = alles erkannt).',
+  clarityEst: 'Grobe Schätzung: wie viele Wörter die Erkennung gemessen an deinen Silben mitbekommen hat (ohne Zieltext nicht genauer messbar).',
+  level: 'Wie deutlich deine Stimme über dem Raumrauschen liegt und ob sie am Satzende abfällt.',
+  pitch: 'Wie stark deine Tonhöhe schwankt (in Halbtönen) – mehr Spannweite klingt lebendig, wenig klingt monoton.',
+  sharp: 'Anteil hoher Frequenzen (2–8 kHz, da stecken s, t, k, sch) – nur im Vergleich zu deinem eigenen Schnitt aussagekräftig.'
+};
+const NAMES = { tempo: 'Sprechtempo', pause: 'Pausen', clarity: 'Deutlichkeit', level: 'Lautstärke', pitch: 'Betonung / Melodie', sharp: 'Artikulationsschärfe' };
+function delta(cur, ref, better, d = 1, unit = '') {
+  if (cur == null || ref == null || !Number.isFinite(cur) || !Number.isFinite(ref)) return '–';
+  const df = cur - ref; if (Math.abs(df) < Math.pow(10, -d) / 2) return '±0';
+  const good = better === 'up' ? df > 0 : better === 'down' ? df < 0 : Math.abs(cur - better) < Math.abs(ref - better);
+  return `<span class="${good ? 'up' : 'down'}">${df > 0 ? '▲' : '▼'} ${fmt(Math.abs(df), d)}${unit}</span>`;
+}
+function scaleBar(v, lo, hi, min, max, labs) { const p = x => Math.max(0, Math.min(100, (x - min) / (max - min) * 100)); return `<div class="scale"><div class="band" style="left:${p(lo)}%;width:${p(hi) - p(lo)}%"></div>${v != null ? `<div class="mk" style="left:${p(v)}%"></div>` : ''}</div><div class="scale-l"><span>${labs[0]}</span><span>${labs[1]}</span><span>${labs[2]}</span></div>`; }
+function miniLine(vals, opts = {}) {
+  const w = 300, h = opts.h || 70, pad = 4, v = vals.map(x => x == null || x <= 0 && opts.skipZero ? null : x), num = v.filter(x => x != null);
+  if (num.length < 2) return '<div class="hint">zu wenig Daten</div>';
+  const mn = opts.min ?? Math.min(...num), mx = opts.max ?? Math.max(...num), sx = i => pad + i / (v.length - 1) * (w - 2 * pad), sy = x => h - pad - (Math.max(mn, Math.min(mx, x)) - mn) / (mx - mn || 1) * (h - 2 * pad);
+  let d = '', pen = false; v.forEach((x, i) => { if (x == null) { pen = false; return; } d += (pen ? 'L' : 'M') + sx(i).toFixed(1) + ' ' + sy(x).toFixed(1) + ' '; pen = true; });
+  const ref = opts.ref != null ? `<line x1="0" x2="${w}" y1="${sy(opts.ref)}" y2="${sy(opts.ref)}" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1"/>` : '';
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">${ref}<path d="${d}" fill="none" stroke="${opts.color || 'var(--accent)'}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+}
+function renderResult(L, demo) {
+  const { res, ev, sess, cmp, asr } = L, m = res.m, d = res.det, ex = state.ex, a = cmp.avg, last = cmp.last ? cmp.last.m : {};
+  const row = k => ev.rows.find(r => r.key === k);
+  const card = (k, body, cmpHtml) => { const r = row(k); if (!r) return ''; return `<div class="mcard"><h4><span class="amp ${r.status}"></span>${NAMES[k]}${r.est ? ' <span class="muted" style="font-weight:500">(Schätzung)</span>' : ''}</h4>${body}${cmpHtml ? `<div class="cmp">${cmpHtml}</div>` : ''}<div class="mtip">${esc(r.tip)}</div><div class="mexp">${r.est ? EXPL.clarityEst : EXPL[k]}</div></div>`; };
+  const [lo, hi] = tempoBand();
+  let cards = '';
+  cards += card('tempo', `<div class="mval">${fmt(m.art)} <small>Silben/s Artikulation</small></div>${scaleBar(m.art, lo, hi, 2, 7, ['2', 'Ziel ' + fmt(lo) + '–' + fmt(hi), '7'])}
+    <div class="msub">Gesamt (mit Pausen): <b>${fmt(m.total)}</b> Silben/s · ${m.wpm != null ? `<b>${fmt(m.wpm, 0)}</b> Wörter/min${m.wpmSrc === 'est' ? ' (geschätzt)' : m.wpmSrc === 'text' ? ' (Text)' : ''} <span class="muted">Ziel 120–150</span>` : ''} · ${m.syl} Silben in ${fmt(m.speechT)} s Sprechzeit</div>`,
+    `Schnitt: ${delta(m.art, a.art, 4.0)} · letzte: ${delta(m.art, last.art, 4.0)}`);
+  cards += card('pause', m.punctHit != null
+    ? `<div class="mval">${m.hitPauses}/${m.expectedPauses} <small>${ex.mode === 'pause' ? 'markierte Pausen gehalten' : 'Pausen an Satzzeichen'}</small></div><div class="msub">${m.midPauses} Pause(n) mitten im Satz · ${m.pauseCount} Pausen gesamt, Ø ${fmt(m.pauseMeanMs, 0)} ms · Sprechanteil ${fmt(m.speechShare * 100, 0)} %</div>`
+    : `<div class="mval">${fmt(m.pausesPerMin, 0)} <small>Pausen/min</small></div><div class="msub">Ø ${fmt(m.pauseMeanMs, 0)} ms · Sprechanteil ${fmt(m.speechShare * 100, 0)} % (gut: 55–82 %) · Satzzeichen-Zuordnung geht nur mit Zieltext</div>`,
+    m.punctHit != null ? `Schnitt: ${delta(m.punctHit * 100, a.punctHit != null ? a.punctHit * 100 : null, 'up', 0, ' %')} · letzte: ${delta(m.punctHit * 100, last.punctHit != null ? last.punctHit * 100 : null, 'up', 0, ' %')}` : `Schnitt Sprechanteil: ${delta(m.speechShare * 100, a.speechShare != null ? a.speechShare * 100 : null, 70, 0, ' %')}`);
+  if (row('clarity')) {
+    if (m.clarity != null) {
+      const ends = m.endings ? Object.entries(m.endings).filter(([, e]) => e.n >= 1).sort((x, y) => x[1].ok / x[1].n - y[1].ok / y[1].n) : [];
+      cards += card('clarity', `<div class="mval">${fmt(m.clarity * 100, 0)} <small>% richtig erkannt</small></div><div class="msub">${m.sub} falsch erkannt · ${m.del} verschluckt · ${m.ins} zusätzlich · WER ${fmt(m.wer * 100, 0)} %</div>
+        ${ends.length ? `<table><tr><th>Wortende</th><th>richtig</th><th>Problem-Wörter</th></tr>${ends.slice(0, 6).map(([c, e]) => `<tr><td>${c}</td><td>${e.ok}/${e.n}</td><td>${e.bad.slice(0, 3).map(b => esc(b.w) + (b.heard ? ` <span class="muted">→ ${esc(b.heard)}</span>` : ' <span class="muted">→ –</span>')).join(', ')}</td></tr>`).join('')}</table>` : ''}`,
+        `Schnitt: ${delta(m.clarity * 100, a.clarity != null ? a.clarity * 100 : null, 'up', 0, ' %')} · letzte: ${delta(m.clarity * 100, last.clarity != null ? last.clarity * 100 : null, 'up', 0, ' %')}`);
+    } else cards += card('clarity', `<div class="mval">${fmt(m.recogRate * 100, 0)} <small>% Erkennungsquote</small></div><div class="msub">${m.asrWords} Wörter erkannt${m.asrConf ? ` · Ø Sicherheit ${fmt(m.asrConf * 100, 0)} %` : ''}</div>`);
+  } else {
+    cards += `<div class="mcard"><h4><span class="amp"></span>Deutlichkeit</h4><div class="msub">${!asr.available ? 'Ausgeblendet: Spracherkennung nicht verfügbar' + (isFile ? ' (file:// – siehe Info → Öffnen).' : '.') : asr.netErr ? 'Ausgeblendet: Die Spracherkennung braucht Internet (Chrome schickt das Audio dafür an Google).' : 'Ausgeblendet: Die Spracherkennung hat nichts geliefert.'}</div><div class="mexp">${EXPL.clarity}</div></div>`;
+  }
+  cards += card('level', `<div class="mval">${fmt(m.snr, 0)} <small>dB über Rauschen</small></div><div class="msub">Pegel ${fmt(m.level, 0)} dBFS · Abfall am Satzende Ø ${m.drop != null ? fmt(m.drop) + ' dB' : '–'}${m.dropShare != null ? ` · ${fmt(m.dropShare * 100, 0)} % der Sätze stark` : ''}</div>${miniLine(d.levelCurve, { min: Math.max(-80, d.noiseF - 5), max: 0, ref: d.spThr })}`,
+    `Schnitt Abfall: ${delta(m.drop, a.drop, 'down', 1, ' dB')} · Rauschabstand: ${delta(m.snr, a.snr, 'up', 0, ' dB')}`);
+  if (row('pitch')) cards += card('pitch', `<div class="mval">${fmt(m.pitchRange)} <small>Halbtöne Spannweite</small></div><div class="msub">${m.pitchRange >= 7 ? 'lebendig' : m.pitchRange >= 4 ? 'etwas flach' : 'monoton'} · Variation ${fmt(m.pitchStd)} HT · Grundton ~${fmt(m.f0, 0)} Hz</div>${miniLine(d.pitchCurve, { skipZero: true, color: 'var(--warn)' })}`,
+    `Schnitt: ${delta(m.pitchRange, a.pitchRange, 'up')} · letzte: ${delta(m.pitchRange, last.pitchRange, 'up')}`);
+  if (row('sharp')) { const r = row('sharp'); cards += card('sharp', r.diff != null ? `<div class="mval">${r.diff >= 0 ? '+' : ''}${fmt(r.diff)} <small>dB ${r.diff > 1 ? 'schärfer' : r.diff < -1 ? 'weicher' : 'wie'} als dein Schnitt</small></div><div class="msub">Spektraler Schwerpunkt ${fmt(m.cen, 0)} Hz</div>` : `<div class="mval">${fmt(m.hf)} <small>dB HF-Anteil</small></div><div class="msub">Spektraler Schwerpunkt ${fmt(m.cen, 0)} Hz</div>`); }
+
+  const tips = ev.top.length ? ev.top.map(r => `<div class="tip">${esc(r.tip)}</div>`).join('') : `<div class="tip">Alles im grünen Bereich – nimm beim nächsten Mal einen schwereren Text oder ein höheres Tempo.</div>`;
+  const legend = state.tokens && m.clarity != null ? `<div class="legend"><span><i style="background:var(--good-soft)"></i>richtig</span><span><i style="background:var(--warn-soft);box-shadow:inset 0 -3px 0 var(--warn)"></i>Wortende anders</span><span><i style="background:var(--warn-soft)"></i>falsch erkannt</span><span><i style="background:var(--bad-soft)"></i>verschluckt</span>${ex.mode !== 'pause' ? '<span><span class="pz"></span>Pause gehalten</span><span><span class="pz mid"></span>Pause mitten im Satz</span>' : ''}<span class="muted">Mit der Maus über ein Wort: was erkannt wurde.</span></div>` : '';
+  const player = state.audioUrl || demo ? `<div class="player">${state.audioUrl ? `<audio controls src="${state.audioUrl}" id="playback"></audio><button class="btn small" id="slowBtn" aria-pressed="false">0,75×</button>` : ''}</div>` : '';
+  const nextBtns = state.program ? `<button class="btn acc" id="nextBtn">${state.program.i < state.program.steps.length - 1 ? 'Weiter zum nächsten Schritt →' : 'Programm abschließen ✓'}</button><button class="btn" id="againBtn">Nochmal</button>`
+    : `<button class="btn" id="againBtn">Nochmal</button>${ex.mode === 'tongue' && ex.round < 2 ? `<button class="btn acc" id="fasterBtn">Nächste Runde: ${ROUNDS[ex.round + 1].k} →</button>` : ''}${['read', 'pause', 'endings', 'free'].includes(ex.mode) ? '<button class="btn" id="nextExBtn">Neue Übung</button>' : ''}`;
+  let roundCmp = '';
+  if (ex.mode === 'tongue' && !demo) { const prevR = S.sessions.filter(s => s.mode === 'tongue' && s.item === ex.item.id && s.id !== sess.id && Date.now() - s.ts < 3 * 3600e3); const r0 = prevR.filter(s => s.round < ex.round).pop();
+    if (r0 && r0.m.clarity != null && m.clarity != null) roundCmp = `<div class="tip" style="border-left-color:${m.clarity >= r0.m.clarity - 0.05 ? 'var(--good)' : 'var(--bad)'}">Gegenüber der Runde „${ROUNDS[r0.round].k}“: Deutlichkeit ${fmt(r0.m.clarity * 100, 0)} % → ${fmt(m.clarity * 100, 0)} %. ${m.clarity >= r0.m.clarity - 0.05 ? 'Gehalten – stark!' : 'Zu viel Deutlichkeit verloren: lieber noch eine Runde im langsameren Tempo.'}</div>`; }
+  $('#result').innerHTML = `<div class="res">
+    <div class="reshead"><div class="score">${ev.score ?? '–'}<small>Score von 100${demo ? ' · Demo, nicht gespeichert' : ''}</small></div>
+      <div class="msub">${esc(MODE_NAMES[ex.mode])}${ex.mode === 'tongue' ? ' · ' + ROUNDS[ex.round].k : ''} · ${fmt(m.totalT)} s${cmp.avg.score != null ? ` · dein Schnitt: ${fmt(cmp.avg.score, 0)}` : ''}${cmp.last ? ` · letzte${cmp.lastSameMode ? ' (gleicher Modus)' : ''}: ${cmp.last.m.score ?? '–'}` : ''}</div>${player}</div>
+    ${roundCmp}<div class="tips">${tips}</div>${legend}
+    <div class="mgrid">${cards}</div>
+    <div class="controls">${nextBtns}</div></div>`;
+  const sb = $('#slowBtn'); if (sb) sb.onclick = () => { const au = $('#playback'), on = sb.getAttribute('aria-pressed') !== 'true'; au.playbackRate = on ? 0.75 : 1; au.preservesPitch = true; sb.setAttribute('aria-pressed', String(on)); sb.classList.toggle('acc', on); };
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+  on('nextBtn', () => nextStep());
+  on('againBtn', () => { setExercise({ ...state.ex }); });
+  on('fasterBtn', () => setExercise(exFor('tongue', { item: ex.item, round: ex.round + 1 })));
+  on('nextExBtn', () => setExercise(exFor(ex.mode, ex.mode === 'endings' ? { cat: ex.cat } : {})));
+  $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---------- Tagesprogramm, Baseline ---------- */
+function startProgram(kind) {
+  let steps;
+  if (kind === 'daily') { const tw = rnd(CONTENT.tongue);
+    steps = [exFor('warmup'), exFor('tongue', { item: tw, round: 0 }), exFor('tongue', { item: tw, round: 2 }), exFor('endings'), exFor('pause'), exFor('read'), exFor('free')]; }
+  else { const test = S.sessions.some(s => s.test === 'baseline' && !s.demo) ? 'retest' : 'baseline';
+    steps = [{ mode: 'read', text: CONTENT.baselineText, title: 'Testtext', item: { id: 'baseline', title: 'Testtext', text: CONTENT.baselineText }, test }, { mode: 'free', topic: CONTENT.baselineTopic, dur: 45, test }]; }
+  state.program = { kind, steps, i: 0 }; $('#progWrap').hidden = false; showStep();
+}
+function showStep() { const p = state.program; $('#progLabel').textContent = `${p.kind === 'daily' ? 'Tagesprogramm' : 'Test'} · Schritt ${p.i + 1} von ${p.steps.length}`; $('#progFill').style.width = (p.i / p.steps.length * 100) + '%'; setExercise(p.steps[p.i]); }
+function nextStep() {
+  const p = state.program; if (!p) { setExercise(exFor('read')); return; }
+  if (p.i < p.steps.length - 1) { p.i++; showStep(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  else { $('#progFill').style.width = '100%'; const kind = p.kind; endProgram(); toast(kind === 'daily' ? 'Tagesprogramm geschafft 💪' : 'Test gespeichert – im Verlauf siehst du den Vergleich.', 3500); if (kind !== 'daily') { $('#bannerRetest').hidden = true; } }
+}
+function endProgram() { state.program = null; $('#progWrap').hidden = true; setExercise(exFor('read')); }
+$('#progQuit').onclick = endProgram;
+async function runWarmup() {
+  const items = $$('#wuList li'), btn = $('#wuGo'); btn.disabled = true;
+  for (let i = 0; i < CONTENT.warmup.length; i++) { items.forEach((li, j) => li.classList.toggle('now', i === j)); for (let s = CONTENT.warmup[i].s; s > 0; s--) { $('#wuTimer').textContent = s + ' s'; await sleep(1000); if (!state.ex || state.ex.mode !== 'warmup') return; } }
+  items.forEach(li => li.classList.remove('now')); $('#wuTimer').textContent = 'fertig!';
+  btn.disabled = false; btn.innerHTML = 'Weiter →'; btn.onclick = () => nextStep();
+}
+
+/* ---------- Demo (synthetische Stimme, keine Speicherung) ---------- */
+function startDemo() { state.program = null; $('#progWrap').hidden = true; const it = CONTENT.read[2]; setExercise({ ...exFor('read', { item: it }), demo: true }); $('#shead').innerHTML = `<h2>Demo · Vorlesen</h2><span class="chip">Simulierte Stimme – kein Mikro nötig</span>`; }
+async function runDemo() {
+  const toks = state.tokens, phrases = []; let cur = [], g = 0;
+  toks.forEach((t, j) => { g += t.syl; if (t.punct === ',' && j % 3 === 0) { cur.push(g); g = 0; } if (/[.!?]/.test(t.punct)) { cur.push(g); g = 0; phrases.push(cur); cur = []; } });
+  if (g) cur.push(g); if (cur.length) phrases.push(cur);
+  const sr = 48000, syn = Core.synthSpeech({ sr, rate: 4.9, phrases, seed: Date.now() % 1000 });
+  const savedNoise = [state.noiseF, state.noiseB]; state.noiseF = -58; state.noiseB = -66;
+  const ext = new Core.Extractor(sr); state.ext = ext; ext.onFrame = liveFrame; state.runMax = -100; state.liveShow = null;
+  setPhase('rec'); if (state.takt) startTakt(); state.t0 = performance.now();
+  // simulierte Erkennung: ein paar Wortenden "verschluckt", ein Wort fehlt
+  const words = []; toks.forEach(t => t.norm.forEach(w => words.push(w)));
+  const hyp = words.map((w, i) => (i % 7 === 3 && Core.endingCat(w)) ? w.slice(0, -1) : w).filter((w, i) => i !== 11);
+  ASR.finals = []; ASR.interim = ''; renderTranscript();
+  const chunk = 2048, total = syn.x.length; let pos = 0;
+  await new Promise(res => { const h = setInterval(() => {
+    if (state.phase !== 'rec') { clearInterval(h); res(); return; }
+    const end = Math.min(total, pos + chunk * 3); ext.push(syn.x.subarray(pos, end)); pos = end;
+    const frac = pos / total, k = Math.floor(hyp.length * frac); ASR.interim = hyp.slice(0, k).join(' '); renderTranscript();
+    $('#timer').textContent = clock(pos / sr);
+    if (pos >= total) { clearInterval(h); res(); } }, chunk * 3 / sr * 1000); });
+  stopTakt(); state.ext = null; ASR.finals = [hyp.join(' ')]; ASR.interim = '';
+  setPhase('analyzing'); $('#result').innerHTML = `<div class="reshead"><span class="spin"></span> Werte aus …</div>`; await sleep(30);
+  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+  state.audioUrl = URL.createObjectURL(new Blob([Core.wavBlobBytes(syn.x.filter((_, i) => i % 3 === 0), 16000)], { type: 'audio/wav' }));
+  finish(ext, { available: true, text: hyp.join(' '), conf: [0.9] }, true);
+  [state.noiseF, state.noiseB] = savedNoise;
+}
+
+/* ---------- Moduswahl ---------- */
+$('#modes').onclick = e => { const b = e.target.closest('.mbtn'); if (!b || state.phase === 'rec' || state.phase === 'calib') return; const mode = b.dataset.mode;
+  if (mode === 'daily' || mode === 'baseline') return startProgram(mode);
+  if (mode === 'demo') return startDemo();
+  state.program = null; $('#progWrap').hidden = true; setExercise(exFor(mode)); };
+$('#retestGo').onclick = () => { showView('train'); startProgram('baseline'); };
+$('#calibBtn').onclick = async () => { if (state.phase !== 'idle') return; try { await ensureMic(); } catch (e) { showBlocked('<b>Kein Mikrofon-Zugriff.</b>'); return; } await calibrate(); setPhase('idle'); toast('Grundrauschen gemessen: ' + fmt(state.noiseF, 0) + ' dBFS'); };
+$('#optTakt').checked = state.takt; $('#optBeep').checked = state.beep; $('#taktRate').value = state.taktRate; $('#taktVal').textContent = fmt(state.taktRate); $('#metroBox').hidden = !state.takt;
+$('#optTakt').onchange = e => { state.takt = e.target.checked; $('#metroBox').hidden = !state.takt; S.settings.takt = state.takt; Store.save(); if (!state.takt) stopTakt(); else if (state.phase === 'rec') startTakt(); };
+$('#optBeep').onchange = e => { state.beep = e.target.checked; S.settings.beep = state.beep; Store.save(); };
+$('#taktRate').oninput = e => { state.taktRate = +e.target.value; $('#taktVal').textContent = fmt(state.taktRate); S.settings.taktRate = state.taktRate; Store.save(); };
+$('#customCancel').onclick = () => $('#customDlg').close();
+$('#customSave').onclick = () => { const text = $('#customText').value.trim(); if (text.split(/\s+/).length < 4) { toast('Bitte mindestens einen ganzen Satz einfügen.'); return; }
+  const item = { id: 'c' + Date.now().toString(36), title: $('#customTitle').value.trim() || text.slice(0, 28) + '…', text }; S.custom.push(item); Store.save(); $('#customDlg').close();
+  setExercise(exFor(text.includes('|') && state.ex.mode === 'pause' ? 'pause' : 'read', { item })); };
+
+/* ---------- Ansichten ---------- */
+function showView(v) { $$('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.view === v))); ['train', 'history', 'info'].forEach(k => $('#view-' + k).hidden = k !== v); if (v === 'history') renderHistory(); if (v === 'info') renderInfo(); }
+$$('.tab').forEach(t => t.onclick = () => showView(t.dataset.view));
+
+/* ---------- Verlauf ---------- */
+function updateStreak() {
+  const days = new Set(S.sessions.filter(s => !s.demo).map(s => dayKey(s.ts))); let n = 0; const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  $('#streakN').textContent = n; return n;
+}
+const HMET = [
+  { k: 'art', l: 'Tempo', unit: 'Silben/s', band: [3.5, 4.5], d: 1, min: 2, max: 7 },
+  { k: 'clarity', l: 'Deutlichkeit', unit: '%', band: [90, 100], d: 0, pct: true, min: 40, max: 100 },
+  { k: 'punctHit', l: 'Pausen', unit: '% an Satzzeichen', band: [70, 100], d: 0, pct: true, min: 0, max: 100 },
+  { k: 'drop', l: 'Lautstärke-Abfall', unit: 'dB am Satzende', band: [0, 5], d: 1, min: 0, max: 15 },
+  { k: 'pitchRange', l: 'Melodie', unit: 'Halbtöne', band: [7, 16], d: 1, min: 0, max: 18 },
+  { k: 'hf', l: 'Schärfe', unit: 'dB HF-Anteil', band: null, d: 1 },
+  { k: 'score', l: 'Score', unit: 'von 100', band: [80, 100], d: 0, min: 0, max: 100 }
+];
+let hMetric = 'art';
+function renderHistory() {
+  const ss = S.sessions.filter(s => !s.demo), streak = updateStreak();
+  const best = (k, f = Math.max) => { const v = ss.map(s => s.m[k]).filter(x => x != null); return v.length ? f(...v) : null; };
+  const bestTempo = ss.filter(s => s.m.art != null).sort((a, b) => Math.abs(a.m.art - 4) - Math.abs(b.m.art - 4))[0];
+  const days = new Set(ss.map(s => dayKey(s.ts))).size;
+  $('#kpis').innerHTML = [
+    [streak + ' 🔥', 'Tage in Folge'], [ss.length, `Übungen an ${days} Tagen`], [best('score') ?? '–', 'Bester Score'],
+    [best('clarity') != null ? fmt(best('clarity') * 100, 0) + ' %' : '–', 'Beste Deutlichkeit'], [bestTempo ? fmt(bestTempo.m.art) : '–', 'Tempo am nächsten an 4,0'],
+    [best('pitchRange') != null ? fmt(best('pitchRange')) + ' HT' : '–', 'Lebendigste Melodie'], [best('drop', Math.min) != null ? fmt(best('drop', Math.min)) + ' dB' : '–', 'Kleinster Satzend-Abfall']
+  ].map(([b, s]) => `<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join('');
+  $('#metricSeg').innerHTML = HMET.map(x => `<button data-k="${x.k}" aria-pressed="${x.k === hMetric}">${x.l}</button>`).join('');
+  $$('#metricSeg button').forEach(b => b.onclick = () => { hMetric = b.dataset.k; renderHistory(); });
+  // Chart: Tagesmittel
+  const meta = HMET.find(x => x.k === hMetric), byDay = {};
+  ss.forEach(s => { const v = s.m[hMetric]; if (v == null) return; (byDay[dayKey(s.ts)] = byDay[dayKey(s.ts)] || []).push(meta.pct ? v * 100 : v); });
+  const pts = Object.keys(byDay).sort().map(k => ({ k, v: Core.mean(byDay[k]), n: byDay[k].length }));
+  $('#chart').innerHTML = pts.length ? historyChart(pts, meta) : '<p class="hint">Noch keine Daten. Mach deine erste Übung – dann erscheinen hier deine Kurven.</p>';
+  $('#chartHint').textContent = pts.length ? `${meta.l} in ${meta.unit}, Tagesmittel. ${meta.band ? 'Grüner Bereich = Zielbereich.' : 'Nur relativ zu dir selbst aussagekräftig.'}` : '';
+  // Tests
+  const tests = ss.filter(s => s.test && s.mode === 'read');
+  $('#testCard').hidden = !tests.length;
+  if (tests.length) {
+    const cols = [['art', 'Tempo', v => fmt(v)], ['clarity', 'Deutlichkeit', v => fmt(v * 100, 0) + ' %'], ['punctHit', 'Pausen an Satzz.', v => fmt(v * 100, 0) + ' %'], ['drop', 'Abfall', v => fmt(v) + ' dB'], ['pitchRange', 'Melodie', v => fmt(v) + ' HT'], ['score', 'Score', v => v]];
+    $('#testTable').innerHTML = `<table><tr><th>Datum</th><th>Test</th>${cols.map(c => `<th>${c[1]}</th>`).join('')}</tr>${tests.map(s => `<tr><td>${new Date(s.ts).toLocaleDateString('de-DE')}</td><td>${s.test === 'baseline' ? 'Baseline' : 'Wochen-Test'}</td>${cols.map(c => `<td>${s.m[c[0]] != null ? c[2](s.m[c[0]]) : '–'}</td>`).join('')}</tr>`).join('')}</table>`;
+  }
+  $('#sessTable').innerHTML = ss.length ? `<table><tr><th>Wann</th><th>Modus</th><th>Übung</th><th>Tempo</th><th>Deutl.</th><th>Pausen</th><th>Melodie</th><th>Score</th></tr>${ss.slice(-25).reverse().map(s => `<tr><td>${new Date(s.ts).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td><td>${MODE_NAMES[s.mode] || s.mode}${s.test ? ' (Test)' : ''}${s.round != null && s.mode === 'tongue' ? ' · ' + ROUNDS[s.round].k : ''}</td><td>${esc(String(s.title).slice(0, 34))}</td><td>${fmt(s.m.art)}</td><td>${s.m.clarity != null ? fmt(s.m.clarity * 100, 0) + ' %' : '–'}</td><td>${s.m.punctHit != null ? fmt(s.m.punctHit * 100, 0) + ' %' : fmt((s.m.speechShare ?? 0) * 100, 0) + ' % Spr.'}</td><td>${fmt(s.m.pitchRange)}</td><td><b>${s.m.score ?? '–'}</b></td></tr>`).join('')}</table>` : '<p class="hint">Noch nichts gespeichert.</p>';
+}
+function historyChart(pts, meta) {
+  const w = 900, h = 260, pl = 44, pr = 16, pt = 14, pb = 34, vals = pts.map(p => p.v);
+  let mn = meta.min ?? Math.min(...vals), mx = meta.max ?? Math.max(...vals); mn = Math.min(mn, ...vals); mx = Math.max(mx, ...vals); if (mx - mn < 1e-6) { mx += 1; mn -= 1; }
+  const sx = i => pts.length === 1 ? (pl + w - pr) / 2 : pl + i / (pts.length - 1) * (w - pl - pr), sy = v => pt + (1 - (v - mn) / (mx - mn)) * (h - pt - pb);
+  let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${meta.l} über die Zeit">`;
+  if (meta.band) { const y1 = sy(Math.min(mx, meta.band[1])), y2 = sy(Math.max(mn, meta.band[0])); s += `<rect x="${pl}" y="${y1}" width="${w - pl - pr}" height="${Math.max(0, y2 - y1)}" fill="var(--good-soft)"/>`; }
+  for (let i = 0; i <= 4; i++) { const v = mn + (mx - mn) * i / 4, y = sy(v); s += `<line x1="${pl}" x2="${w - pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl - 8}" y="${y + 4}" font-size="12" text-anchor="end" fill="var(--muted)">${fmt(v, meta.d)}</text>`; }
+  const step = Math.max(1, Math.ceil(pts.length / 8)); pts.forEach((p, i) => { if (i % step === 0 || i === pts.length - 1) s += `<text x="${sx(i)}" y="${h - 10}" font-size="12" text-anchor="middle" fill="var(--muted)">${p.k.slice(8)}.${p.k.slice(5, 7)}.</text>`; });
+  s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(1) + ' ' + sy(p.v).toFixed(1)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach((p, i) => s += `<circle cx="${sx(i)}" cy="${sy(p.v)}" r="4.5" fill="var(--surface)" stroke="var(--accent)" stroke-width="2.5"><title>${p.k}: ${fmt(p.v, meta.d)} ${meta.unit} (${p.n} Übung${p.n > 1 ? 'en' : ''})</title></circle>`);
+  return s + '</svg>';
+}
+$('#expBtn').onclick = () => { const blob = new Blob([JSON.stringify({ app: 'sprechtrainer', version: 1, exported: new Date().toISOString(), ...S }, null, 1)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sprechtrainer-verlauf-${dayKey(Date.now())}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+$('#impBtn').onclick = () => $('#impFile').click();
+$('#impFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.sessions)) throw new Error('kein Verlauf');
+    const ids = new Set(S.sessions.map(s => s.id)); let n = 0; d.sessions.forEach(s => { if (s && s.id && s.m && !ids.has(s.id)) { S.sessions.push(s); n++; } }); S.sessions.sort((a, b) => a.ts - b.ts);
+    (d.custom || []).forEach(c => { if (!S.custom.some(x => x.id === c.id)) S.custom.push(c); }); Store.save(); renderHistory(); toast(`${n} Übungen importiert.`); }
+  catch (err) { toast('Import fehlgeschlagen: ' + err.message, 3500); } e.target.value = ''; };
+$('#wipeBtn').onclick = () => { if (confirm('Wirklich den ganzen Verlauf löschen? Tipp: vorher exportieren.')) { S.sessions = []; Store.data.sessions = S.sessions; Store.save(); renderHistory(); toast('Verlauf gelöscht.'); } };
+
+/* ---------- Info ---------- */
+function renderInfo() {
+  $('#infoBody').innerHTML = `
+  <h2 style="margin-top:0">So funktioniert der Trainer</h2>
+  <p>Jeden Tag 5–10 Minuten reichen. Am einfachsten: <b>Tagesprogramm</b> drücken und durchklicken. Einmal pro Woche den <b>Wochen-Test</b> mit demselben Text machen – das ist dein fairer Vorher-nachher-Vergleich. Leertaste startet/stoppt die Aufnahme.</p>
+  <h3>Was gemessen wird – und wie genau</h3>
+  <table>
+   <tr><th>Kennzahl</th><th>Wie</th><th>Ehrlich gesagt</th></tr>
+   <tr><td>Sprechtempo</td><td>Silbenkerne = Gipfel der geglätteten Lautstärke im Sprachband (300–3000 Hz), mind. 100 ms Abstand und 2 dB Einsenkung dazwischen.</td><td>Näherung. Bei schnellem, verschliffenem Sprechen werden Silben eher <i>unter</i>schätzt (±10–15 %). Für deinen Verlauf trotzdem gut, weil der Fehler immer gleich ist.</td></tr>
+   <tr><td>Wörter/min</td><td>Beim Vorlesen aus den gelesenen Textwörtern, beim freien Sprechen aus der Spracherkennung.</td><td>Relativ genau beim Vorlesen.</td></tr>
+   <tr><td>Pausen</td><td>Stille &gt; 250 ms (10 dB über dem kalibrierten Grundrauschen gilt als Sprechen). Zuordnung zu Satzzeichen über die Silbenposition im Text.</td><td>Pausen-Erkennung zuverlässig; die Zuordnung zu Satzzeichen ist eine Schätzung (±2 Silben).</td></tr>
+   <tr><td>Deutlichkeit</td><td>Wort-Fehlerrate zwischen Zieltext und Spracherkennung, normalisiert (klein, ohne Satzzeichen, Zahlen als Wörter), plus Auswertung der Wortenden.</td><td>Misst eigentlich „Wie gut versteht Google dich?“. Das korreliert gut mit Nuscheln, aber die Erkennung errät auch mal Wörter aus dem Kontext oder verhaspelt sich bei Fachbegriffen und Anglizismen.</td></tr>
+   <tr><td>Lautstärke</td><td>RMS-Pegel in dBFS, Abstand zum Grundrauschen, Abfall = erste Hälfte vs. letztes Viertel jedes Sprechabschnitts.</td><td>Pegel ist echt gemessen, hängt aber von Mikro und Abstand ab – vergleiche nur am selben Laptop. Leichter Abfall am Satzende ist normal.</td></tr>
+   <tr><td>Melodie</td><td>Grundfrequenz per YIN-Algorithmus, Spannweite (5.–95. Perzentil) in Halbtönen.</td><td>Solide bei ruhigem Raum. Einzelne Oktavfehler werden rausgefiltert.</td></tr>
+   <tr><td>Schärfe</td><td>Anteil der Energie zwischen 2 und 8 kHz und spektraler Schwerpunkt in Sprechabschnitten, verglichen mit deinem Schnitt (ab 3 Übungen; bei genug Daten nur gleicher Modus).</td><td>Grobe Näherung. Hängt stark vom Text ab (viele s/sch = schärfer). Nur Tendenzen anschauen.</td></tr>
+  </table>
+  <h3>Zielwerte</h3>
+  <ul><li>Artikulationstempo <b>3,5–4,5 Silben/s</b>, also ca. <b>120–150 Wörter/min</b></li><li>Pausen an mindestens <b>70 %</b> der Satzzeichen, beim freien Sprechen <b>55–82 %</b> Sprechanteil</li><li>Deutlichkeit ab <b>90 %</b></li><li>Rauschabstand ab <b>25 dB</b>, Abfall am Satzende unter <b>5 dB</b></li><li>Melodie ab <b>7 Halbtönen</b> Spannweite</li></ul>
+  <h3 id="open">Trainer richtig öffnen</h3>
+  <p>Chrome erlaubt Mikrofon und Spracherkennung nur in einem „sicheren Kontext“ (https oder localhost). Direkt per Doppelklick (file://) klappt das Mikro meist, die Spracherkennung oft nicht.</p>
+  <p><b>Empfehlung: GitHub Pages</b> – einmal einrichten, dann hast du eine feste https-Adresse, Chrome merkt sich die Mikrofon-Erlaubnis und es läuft auch am Handy.</p>
+  <ol>
+   <li>Auf <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a> ein Repository <code>sprechtrainer</code> anlegen (Public – GitHub Pages ist für öffentliche Repos kostenlos; deine Übungsdaten bleiben trotzdem nur in deinem Browser).</li>
+   <li>Im leeren Repo auf <i>„uploading an existing file“</i> klicken, die Datei hochladen und vorher in <code>index.html</code> umbenennen. Unten <i>„Commit changes“</i>.</li>
+   <li><i>Settings → Pages</i>: bei <i>Source</i> „Deploy from a branch“, Branch <code>main</code>, Ordner <code>/ (root)</code>, <i>Save</i>.</li>
+   <li>Nach 1–2 Minuten ist der Trainer unter <code>https://pb2007bn-coder.github.io/sprechtrainer/</code> erreichbar. Als Lesezeichen speichern.</li>
+   <li>Beim ersten Start „Mikrofon erlauben“ klicken.</li>
+  </ol>
+  <p><b>Alternative ohne Internet-Hosting: localhost</b></p>
+  <ol>
+   <li>Im Explorer den Ordner mit der Datei öffnen, oben in die Adresszeile <code>cmd</code> tippen, Enter.</li>
+   <li><code>python -m http.server 8000</code> eingeben (Python muss installiert sein).</li>
+   <li>In Chrome <code>http://localhost:8000/sprechtrainer.html</code> öffnen. Das Fenster mit dem Server offen lassen; beenden mit Strg+C.</li>
+  </ol>
+  <p class="hint">Wichtig: Der Verlauf liegt im Browser-Speicher <i>pro Adresse</i>. localhost und GitHub Pages haben getrennte Verläufe – zum Umziehen „Verlauf exportieren“ und dort „Importieren“.</p>
+  <h3>Datenschutz</h3>
+  <p>Alle Messungen laufen lokal in deinem Browser, die Aufnahmen werden nicht gespeichert. <b>Ausnahme:</b> Die Spracherkennung von Chrome schickt das Audio zur Erkennung an Google-Server – ohne sie gibt es nur keinen Deutlichkeits-Wert. Schriftarten kommen von Google Fonts.</p>
+  <h3>Tipps für saubere Messwerte</h3>
+  <ul><li>Immer derselbe Ort, Laptop-Mikro oder Headset, ca. 30–50 cm Abstand.</li><li>Beim Kalibrieren wirklich 3 Sekunden still sein.</li><li>Kein Musik- oder Lüftergeräusch im Hintergrund.</li></ul>`;
+}
+
+/* ---------- Start ---------- */
+buildGauge(); updateStreak(); requestAnimationFrame(drawLoop);
+if (S.settings.noise && Date.now() - S.settings.noise.ts < 6 * 3600e3) { $('#noiseTxt').textContent = fmt(S.settings.noise.f, 0) + ' dBFS (zuletzt gemessen)'; }
+const real = S.sessions.filter(s => !s.demo), tests = real.filter(s => s.test);
+if (!real.length) {
+  setExercise(exFor('read', { item: CONTENT.read[0] }));
+  $('#result').innerHTML = `<div class="banner info" style="margin:0"><div><p><b>Hi Paul 👋 Willkommen!</b> Starte am besten mit dem <b>Baseline-Test</b> (ca. 2 Minuten): Ich messe einmal, wie du gerade sprichst – daran misst du später deinen Fortschritt.</p><p style="margin-top:10px"><button class="btn acc" id="bsGo">Baseline-Test starten</button> <button class="btn" id="demoGo">Erst die Demo ansehen</button></p></div></div>`;
+  $('#bsGo').onclick = () => startProgram('baseline'); $('#demoGo').onclick = startDemo;
+} else {
+  setExercise(exFor('read'));
+  const lastT = tests.length ? tests[tests.length - 1].ts : real[0].ts;
+  if (Date.now() - lastT > 7 * 864e5) $('#bannerRetest').hidden = false;
+}
+window.__ST = { state, S, Core };
+})();
+</script>
+</body>
+</html>
